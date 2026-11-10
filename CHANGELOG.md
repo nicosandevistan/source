@@ -1,5 +1,36 @@
 # Changelog
 
+## Milestone 1 — Profile builder (2026-11-10, awaiting owner checks)
+
+Added
+- Profile page (`/dashboard/profile`): import, review, entry-point prompts,
+  alternate names, group sizes, voice samples.
+- LinkedIn data export import: tolerant CSV reader (missing files, renamed
+  columns, notes before the header), opened in the browser so only profile
+  files are uploaded.
+- LinkedIn PDF and resume import: PDF text extraction, LLM mapping to
+  entries, and a code check that flags any entry not found in the text.
+- Alias suggestions that are saved only after the user confirms them.
+- `profile_entries` and `voice_samples` tables with Row Level Security.
+- `LlmClient` interface with Anthropic and fixture implementations.
+- 76 new tests (117 total), including real-database tests that user A
+  cannot read, change or delete user B's rows.
+
+Acceptance criteria
+- [ ] The owner's LinkedIn PDF produces his positions and education with no
+      missing or invented entries. **Needs the owner**: a hands-on check
+      with his PDF and `ANTHROPIC_API_KEY`. Automated tests cover the
+      pipeline with a sample PDF and a canned model reply.
+- [x] A ZIP missing some CSVs still imports without errors (automated).
+- [ ] Adding "MIT ESP" by hand yields alias suggestions including
+      "Educational Studies Program". **Needs the owner**: depends on the
+      live model. The automated test covers the plumbing only.
+
+Not yet exercised
+- The signed-in profile page has not been opened in a browser, because that
+  needs a real Supabase project. Signed-out behavior (redirect to login,
+  401 from the import endpoint) was checked.
+
 ## Milestone 0 — Foundation (2026-11-10)
 
 Added
@@ -23,7 +54,6 @@ Acceptance criteria
       and the routes were exercised locally. **Not yet confirmed with a real
       Google account**: that needs the owner's Supabase project and Google
       OAuth client (README, steps 2–3).
-- [x] Lint, type-check, tests and build pass locally with the same commands
-      CI runs. **CI itself has not run yet** (it runs on the first push).
+- [x] CI is green on `main` (lint, type-check, tests, build, audit).
 - [x] Secrets come only from environment variables (enforced by tests).
 - [ ] Preview deploys: needs the owner to import the repo in Vercel.

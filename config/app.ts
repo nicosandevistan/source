@@ -100,6 +100,43 @@ export const scoring = {
   BUSY_WINDOW_DAYS: 60,
 } as const;
 
+/** Profile builder (milestone 1). */
+export const profile = {
+  /** Largest PDF the import endpoint accepts. */
+  MAX_UPLOAD_BYTES: 4_000_000,
+  /** Largest total size of export CSV text the browser may send. */
+  MAX_EXPORT_CHARS: 2_000_000,
+  /** Profile text beyond this is cut before it goes to the LLM. */
+  MAX_SOURCE_CHARS: 60_000,
+  MAX_ENTRIES_PER_IMPORT: 200,
+  MAX_VOICE_SAMPLES: 2,
+  VOICE_SAMPLE_MIN_CHARS: 40,
+  VOICE_SAMPLE_MAX_CHARS: 4_000,
+  MAX_ALIASES: 8,
+  EXTRACTION_MAX_TOKENS: 8_000,
+  ALIAS_MAX_TOKENS: 500,
+} as const;
+
+/**
+ * Which hook type supplies the default group size for each kind of
+ * profile entry (the user can override the number per entry).
+ */
+export const entryTypeToHookType = {
+  employer: "employer",
+  school: "college",
+  program: "small_program",
+  scholarship: "small_program",
+  club: "small_program",
+  affinity_org: "affinity_org",
+  hometown: "hometown",
+  high_school: "high_school",
+  language: "language",
+  interest: "interest",
+  volunteer: "affinity_org",
+  publication: "small_program",
+  other: "employer",
+} as const satisfies Record<string, HookType>;
+
 export const models = {
   /** Extraction, planning and drafting. */
   MAIN: "claude-sonnet-5-5",
@@ -130,6 +167,8 @@ export const appConfig = {
   hookTypes,
   scoring,
   models,
+  profile,
+  entryTypeToHookType,
   featureFlags,
   googleScopes,
 } as const;
