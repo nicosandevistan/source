@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { profile } from "@/config/app";
 import { requireUser } from "@/lib/auth/user";
 import { ENTRY_POINT_PROMPTS } from "@/lib/engine/profile/entry-points";
-import { confirmAllReviewed, deleteVoiceSample } from "@/lib/profile/actions";
+import { confirmAllReviewed, deleteVoiceSample, removeUncheckedFromSource } from "@/lib/profile/actions";
 import { getProfile } from "@/lib/profile/queries";
 import { DashboardHeader } from "../_components/header";
 import { EntryCard } from "./_components/entry-card";
@@ -53,6 +53,10 @@ async function ProfileBody() {
   await requireUser();
   const { entries, voiceSamples } = await getProfile();
   const toReview = entries.filter((e) => e.needs_review).length;
+  const SOURCE_LABELS = { linkedin_pdf: "LinkedIn PDF", linkedin_export: "LinkedIn export", resume: "resume" } as const;
+  const uncheckedBySource = (Object.keys(SOURCE_LABELS) as (keyof typeof SOURCE_LABELS)[])
+    .map((source) => ({ source, count: entries.filter((e) => e.needs_review && e.source === source).length }))
+    .filter((s) => s.count > 0);
   const have = new Set(entries.map((e) => e.type));
 
   return (
@@ -68,11 +72,21 @@ async function ProfileBody() {
         }
       >
         {toReview > 0 && (
-          <form action={confirmAllReviewed}>
-            <Button type="submit" variant="outline" size="sm">
-              I have checked them all
-            </Button>
-          </form>
+          <div className="flex flex-wrap gap-2">
+            <form action={confirmAllReviewed}>
+              <Button type="submit" variant="outline" size="sm">
+                I have checked them all
+              </Button>
+            </form>
+            {uncheckedBySource.map(({ source, count }) => (
+              <form key={source} action={removeUncheckedFromSource}>
+                <input type="hidden" name="source" value={source} />
+                <Button type="submit" variant="outline" size="sm">
+                  Remove the {count} unchecked from {SOURCE_LABELS[source]}
+                </Button>
+              </form>
+            ))}
+          </div>
         )}
         <ul className="space-y-2">
           {entries.map((entry) => (

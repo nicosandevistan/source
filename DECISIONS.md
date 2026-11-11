@@ -54,7 +54,16 @@ rule 9 in the build plan, and every section that named a paid service has a
 7. **Budget is $0.** `MONTHLY_BUDGET_USD_PER_USER` is 0 and the usage ledger
    is replaced by per-adapter free-quota tracking.
 
-8. **Hosting stays on free tiers.** Supabase Free pauses a project after a
+8. **PDF layout cues: font size for LinkedIn, indentation for resumes.**
+   Testing on the owner's real files showed text alone can't tell a wrapped
+   line from a new entry. LinkedIn's PDF uses fixed sizes (company 12,
+   title 11.5, details 10.5 points), so Experience is read by size, with a
+   text-only fallback when sizes are all equal. Resumes indent the wrapped
+   part of a bullet, so indented lines are skipped. The real files were used
+   only for local debugging and are not in the repository; the fixtures
+   copy their structure with made-up names.
+
+9. **Hosting stays on free tiers.** Supabase Free pauses a project after a
    week of low activity (restore it for free, or add a scheduled ping).
    Vercel Hobby is for non-commercial use, which fits a tool for the owner
    and friends; charging for the app later would need Vercel's paid plan.

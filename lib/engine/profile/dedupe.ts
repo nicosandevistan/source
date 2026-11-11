@@ -3,8 +3,14 @@ import type { DraftEntry } from "./types";
 
 type Keyed = { type: string; value: string; start?: string | null; start_date?: string | null };
 
+/** Kinds where one person can hold several roles at different times, so dates tell entries apart. */
+const DATED_TYPES = new Set(["employer", "volunteer", "club"]);
+
 export function entryKey(e: Keyed): string {
-  return [e.type, normalizeForMatch(e.value), e.start ?? e.start_date ?? ""].join("|");
+  // A school, language or program appears once however its dates were written
+  // (LinkedIn and a resume often disagree on them).
+  const start = DATED_TYPES.has(e.type) ? (e.start ?? e.start_date ?? "") : "";
+  return [e.type, normalizeForMatch(e.value), start].join("|");
 }
 
 /** Drops drafts that repeat each other or something the user already has. */

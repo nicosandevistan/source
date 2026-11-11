@@ -1,11 +1,12 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { z } from "zod";
 import { profile } from "@/config/app";
 import { requireUser } from "@/lib/auth/user";
 import { suggestAliases, tidyAliases } from "@/lib/engine/profile/aliases";
 import { defaultGroupSize } from "@/lib/engine/profile/group-size";
-import type { EntryType } from "@/lib/engine/profile/types";
+import { ENTRY_SOURCES, type EntryType } from "@/lib/engine/profile/types";
 import { createClient } from "@/lib/supabase/server";
 import { entryFields, firstError, uuid, voiceSampleField } from "./validation";
 
@@ -89,6 +90,18 @@ export async function setUseForMatching(form: FormData): Promise<void> {
 export async function confirmAllReviewed(): Promise<void> {
   const supabase = await db();
   await supabase.from("profile_entries").update({ needs_review: false }).eq("needs_review", true);
+  refresh();
+}
+
+/**
+ * Removes every entry from one import source that the user has not checked
+ * yet, so a bad import can be undone in one step and re-run.
+ */
+export async function removeUncheckedFromSource(form: FormData): Promise<void> {
+  const source = z.enum(ENTRY_SOURCES).exclude(["manual"]).safeParse(form.get("source"));
+  if (!source.success) return;
+  const supabase = await db();
+  await supabase.from("profile_entries").delete().eq("source", source.data).eq("needs_review", true);
   refresh();
 }
 

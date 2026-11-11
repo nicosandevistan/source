@@ -1,5 +1,25 @@
 # Changelog
 
+## PDF reading fixes from the owner's real files (2026-11-11)
+
+Fixed
+- LinkedIn PDF: company names and degree lines that wrap onto a second line
+  were split, so only the last part was kept (for example "(previously
+  OEOP)" instead of the full program name). Experience is now read by font
+  size (company, title and detail lines each have their own size), and
+  wrapped lines are joined.
+- Resume: the wrapped second line of a bullet has no bullet mark, so it was
+  read as a new employer. Indented lines (and lower-case lines after a
+  bullet) are now treated as the rest of the bullet. Combined headings such
+  as "LEADERSHIP & PROJECTS" are recognized, "Organization | Title" lines
+  are split, and "English and Spanish (bilingual)" gives two languages.
+- The same school, language or program from two imports with different
+  dates is now merged instead of added twice.
+
+Added
+- "Remove the N unchecked from <source>" buttons, to undo a bad import in
+  one step and run it again.
+
 ## Zero-cost rework of milestone 1 (2026-11-11)
 
 Changed

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { hookTypes, profile } from "@/config/app";
 import { acronymOf, suggestAliases, tidyAliases } from "@/lib/engine/profile/aliases";
 import { findDateRange, isDateLine, isDurationLine } from "@/lib/engine/profile/dates";
+import { dedupe } from "@/lib/engine/profile/dedupe";
 import { extractEntries } from "@/lib/engine/profile/extract";
 import { defaultGroupSize } from "@/lib/engine/profile/group-size";
 import { looksLikeLocation } from "@/lib/engine/profile/parse-linkedin-pdf";
@@ -90,14 +91,30 @@ describe("LinkedIn PDF import (no language model)", () => {
       { type: "employer", value: "Northwind Biotech", start: "2026-06", end: "2026-08", details: "Strategy Intern" },
       { type: "employer", value: "Example Consulting Group", start: "2026-03", end: null, details: "Senior Analyst" },
       { type: "employer", value: "Example Consulting Group", start: "2025-09", end: "2026-03", details: "Junior Analyst" },
+      // A company name that wraps onto a second line is joined, not split.
+      {
+        type: "employer",
+        value: "Riverside Institute for Science, Technology, and Engineering (previously RISE)",
+        start: "2024-06",
+        end: "2024-08",
+        details: "Summer Scholar",
+      },
+      // A role continued after a page break, with a description line before the next company.
       { type: "employer", value: "Riverbend Coffee Co.", start: "2023", end: "2024", details: "Barista" },
-      { type: "school", value: "Example State University", start: "2024", end: "2028", details: "Bachelor of Science - BS, Economics" },
+      // A degree line that wraps is joined.
+      {
+        type: "school",
+        value: "Example State University",
+        start: "2024",
+        end: "2028",
+        details: "Bachelor of Science - BS, Economics and Statistics & Data Science",
+      },
       { type: "program", value: "MIT Educational Studies Program", start: "2022", end: "2022", details: null },
-      { type: "high_school", value: "Revere High School", start: "2020", end: "2024", details: "High School Diploma" },
+      { type: "high_school", value: "Revere High School", start: null, end: null, details: null },
     ]);
     // The name, headline, location, summary, contact details and skills are not entries.
     const values = result.entries.map((e) => e.value).join(" | ");
-    for (const left of ["Jordan Rivera", "Student at", "Revere, Massachusetts", "example.com", "Financial Modeling", "Page 1"]) {
+    for (const left of ["Jordan Rivera", "Student at", "Revere, Massachusetts", "example.c", "Financial Modeling", "Page 1", "head of strategy", "Research Operations"]) {
       expect(values).not.toContain(left);
     }
     expect(result.flagged).toBe(0);
@@ -130,10 +147,17 @@ describe("resume import (no language model)", () => {
       { type: "high_school", value: "Revere High School", start: "2020", end: "2024", details: null },
       { type: "employer", value: "Northwind Biotech", start: "2026-06", end: "2026-08", details: "Strategy Intern" },
       { type: "employer", value: "Example Consulting Group", start: "2025-09", end: null, details: "Junior Analyst" },
+      // "LEADERSHIP & PROJECTS" is read as an activities heading; "Org | Title" is split.
       { type: "club", value: "Latin American Business Society", start: "2025-01", end: null, details: "Treasurer" },
-      { type: "language", value: "Spanish", start: null, end: null, details: "native" },
-      { type: "language", value: "Portuguese", start: null, end: null, details: "conversational" },
+      { type: "club", value: "iGEM Example Team", start: "2023-12", end: "2024-08", details: "Vice President" },
+      { type: "language", value: "English", start: null, end: null, details: "bilingual" },
+      { type: "language", value: "Spanish", start: null, end: null, details: "bilingual" },
+      { type: "language", value: "Portuguese", start: null, end: null, details: null },
+      { type: "language", value: "French", start: null, end: null, details: null },
     ]);
+    // Wrapped bullet lines (indented, no bullet mark) never become entries.
+    const values = result.entries.map((e) => e.value).join(" | ");
+    for (const left of ["Alex Smith", "GOseq", "competition (150+", "JORDAN"]) expect(values).not.toContain(left);
     expect(result.entries.every((e) => e.needsReview && e.source === "resume")).toBe(true);
   });
 
@@ -150,6 +174,23 @@ describe("resume import (no language model)", () => {
     expect(pick(result.entries)).toEqual([
       { type: "employer", value: "Acme Labs", start: "2024", end: "2025", details: "Analyst" },
     ]);
+  });
+});
+
+describe("merging duplicates across imports", () => {
+  it("treats the same school with different dates as one entry, but keeps separate roles", () => {
+    const base = { start: null, end: null, details: null, source: "resume" as const, useForMatching: true, needsReview: true };
+    const fresh = dedupe(
+      [
+        { ...base, type: "school", value: "University of Massachusetts -Amherst", start: "2025" },
+        { ...base, type: "employer", value: "Example Consulting Group", start: "2025-09" },
+      ],
+      [
+        { type: "school", value: "University of Massachusetts Amherst", start_date: null },
+        { type: "employer", value: "Example Consulting Group", start_date: "2026-03" },
+      ],
+    );
+    expect(fresh.map((e) => e.type)).toEqual(["employer"]);
   });
 });
 
