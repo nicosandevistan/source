@@ -57,7 +57,7 @@ describe("secrets (hard rule 7)", () => {
       const isClient = /^\s*["']use client["']/.test(text);
       return (
         isClient &&
-        /from ["']@\/lib\/(env\/server|supabase\/server|auth\/user|llm\/anthropic|profile\/(queries|save))["']/.test(text)
+        /from ["']@\/lib\/(env\/server|supabase\/server|auth\/user|profile\/(queries|save))["']/.test(text)
       );
     });
     expect(offenders).toEqual([]);
@@ -68,7 +68,6 @@ describe("secrets (hard rule 7)", () => {
       "lib/env/server.ts",
       "lib/supabase/server.ts",
       "lib/auth/user.ts",
-      "lib/llm/anthropic.ts",
       "lib/profile/queries.ts",
       "lib/profile/save.ts",
     ]) {

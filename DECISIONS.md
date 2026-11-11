@@ -3,6 +3,62 @@
 Choices made where the build plan was silent or ambiguous. Newest first.
 The owner (Nico) can overrule any of these.
 
+## Zero-cost build (2026-11-11)
+
+The owner decided that no part of the app may cost money. This is now hard
+rule 9 in the build plan, and every section that named a paid service has a
+"Zero-cost:" note. What changed and why:
+
+1. **No language model API.** The Anthropic API was the one cost in
+   milestone 1, and it would have grown in milestones 2–5 (planning, hook
+   extraction, drafting). Free LLM tiers were ruled out: they change often
+   (Google cut the Gemini free tier's limits sharply in 2026) and some may
+   use requests to improve the provider's products, which is wrong for users'
+   profile data. `lib/llm/`, `@anthropic-ai/sdk` and `ANTHROPIC_API_KEY` are
+   removed.
+
+2. **LinkedIn PDF import reads the layout with rules.** LinkedIn's "Save to
+   PDF" has a fixed layout, so `lib/engine/profile/parse-linkedin-pdf.ts`
+   reads it directly: it splits the sidebar from the main column using text
+   positions, then reads Experience blocks (company, optional tenure line,
+   title, date line, location), Education (school, then "Degree · (dates)"),
+   Languages, Honors-Awards, Certifications and Publications. Resumes vary
+   more, so `parse-resume.ts` uses looser rules (headings, then groups of
+   non-bullet lines). Every entry is still marked "to check", and the code
+   check that a name appears in the file is kept. The data export ZIP is now
+   listed first as the most accurate import.
+
+3. **Alias suggestions come from a hand-kept catalog.**
+   `lib/engine/profile/alias-catalog.ts` lists common programs, affinity
+   organizations, schools and firms with their other names and sub-programs
+   (MIT ESP → Educational Studies Program, Splash, Spark, HSSP). Simple rules
+   add "&"/"and" swaps, dropped company suffixes and an acronym for names of
+   three or more words. The user still confirms every suggestion and can type
+   their own. `MAX_ALIASES` went from 8 to 12 so a catalog group is not cut
+   short.
+
+4. **People data comes from the user's own connections, not a paid
+   provider.** Apollo and People Data Labs are dropped (Apollo's API access
+   may need a paid plan; PDL's useful plan has a monthly minimum). Discovery
+   (M3) will search the user's Connections.csv and people they add by hand.
+   This narrows discovery to people the user is already linked to, which the
+   owner accepted.
+
+5. **Emails: user-entered first, then Hunter's free plan, then a labeled
+   guess.** The pattern guess is always marked "unverified".
+
+6. **No Inngest or Resend for now.** Background work will run from a jobs
+   table via Vercel's free cron or on request (settled at M3). The daily
+   digest becomes an in-app "Today" page; intro requests are in-app notices.
+
+7. **Budget is $0.** `MONTHLY_BUDGET_USD_PER_USER` is 0 and the usage ledger
+   is replaced by per-adapter free-quota tracking.
+
+8. **Hosting stays on free tiers.** Supabase Free pauses a project after a
+   week of low activity (restore it for free, or add a scheduled ping).
+   Vercel Hobby is for non-commercial use, which fits a tool for the owner
+   and friends; charging for the app later would need Vercel's paid plan.
+
 ## Milestone 1 (2026-11-10)
 
 1. **Started before the owner confirmed M0 sign-in.** M0's CI is green, but
@@ -26,8 +82,9 @@ The owner (Nico) can overrule any of these.
    section 6). Entries from the export ZIP are the user's own structured
    data, so they are not marked.
 
-5. **Invented entries are flagged, not silently dropped.** After the LLM
-   reads a PDF, code checks that each entry's name appears in the PDF text
+5. **Invented entries are flagged, not silently dropped.** (Superseded in
+   part: PDFs are now read by rules, not an LLM, but the check stays.)
+   After the LLM reads a PDF, code checks that each entry's name appears in the PDF text
    (ignoring case, accents and punctuation, whole words only). An entry that
    fails is kept, shown with a warning, and switched off for matching until
    the user confirms it. Dropping it could hide a real entry the model had
@@ -57,17 +114,17 @@ The owner (Nico) can overrule any of these.
     (`tests/db/harness.ts`) stands in for Supabase's `auth` schema and
     roles. This replaces the Docker plan in M0 decision 7.
 
-11. **LLM calls use the Anthropic SDK's structured output**
+11. *(Superseded by the zero-cost build: no LLM.)* **LLM calls use the Anthropic SDK's structured output**
     (`messages.parse` with a zod schema), and the reply is checked against
     the schema again in our code. All LLM access goes through the
     `LlmClient` interface, with a fixture client for tests.
 
-12. **The alias test uses a canned reply.** It proves the plumbing and the
+12. *(Superseded: aliases now come from a catalog, tested directly.)* **The alias test uses a canned reply.** It proves the plumbing and the
     tidy-up rules, not the model's knowledge. Whether the real model
     suggests "Educational Studies Program" for "MIT ESP" is a hands-on check
     for the owner (needs `ANTHROPIC_API_KEY`).
 
-13. **LLM cost is not recorded yet.** The spec puts `usage_ledger` in
+13. *(Superseded: no paid calls to record.)* **LLM cost is not recorded yet.** The spec puts `usage_ledger` in
     milestone 3. Until then the two M1 calls (PDF extraction, alias
     suggestions) are not logged. Each is a single small request.
 

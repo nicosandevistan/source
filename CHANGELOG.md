@@ -1,5 +1,35 @@
 # Changelog
 
+## Zero-cost rework of milestone 1 (2026-11-11)
+
+Changed
+- LinkedIn PDF import reads LinkedIn's layout with rules (sidebar and main
+  column split by text position) instead of an LLM. Resume import uses
+  looser heading-based rules. Every entry is still marked "to check" and
+  checked against the file's text.
+- "Suggest names" uses a built-in catalog of programs, organizations,
+  schools and firms, plus spelling rules (acronyms, "&"/"and", company
+  suffixes). Free and instant.
+- The data export ZIP is listed first as the most accurate import.
+- Build plan revised to zero cost (hard rule 9); see DECISIONS.md.
+
+Removed
+- `lib/llm/`, the `@anthropic-ai/sdk` package, and the `ANTHROPIC_API_KEY`,
+  `APOLLO_API_KEY` and `PDL_API_KEY` settings.
+
+Added
+- `scripts/make-test-pdfs.mjs` and two fixtures: a two-column
+  LinkedIn-style PDF (multi-role company, descriptions, page footers) and a
+  one-column resume. Parser tests check every entry, field by field.
+
+Acceptance criteria (M1)
+- [ ] The owner's LinkedIn PDF produces his positions and education with no
+      missing or invented entries. **Needs the owner**: no API key needed
+      any more, only a Supabase project to sign in to.
+- [x] A ZIP missing some CSVs still imports without errors (automated).
+- [x] Adding "MIT ESP" by hand yields alias suggestions including
+      "Educational Studies Program" (automated, from the catalog).
+
 ## Milestone 1 — Profile builder (2026-11-10, awaiting owner checks)
 
 Added

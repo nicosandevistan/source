@@ -12,21 +12,21 @@ type Kind = "linkedin_pdf" | "linkedin_export" | "resume";
 
 const SOURCES: { kind: Kind; title: string; help: string; accept: string }[] = [
   {
-    kind: "linkedin_pdf",
-    title: "LinkedIn profile PDF",
-    help: "On your own profile: More → Save to PDF.",
-    accept: "application/pdf,.pdf",
-  },
-  {
     kind: "linkedin_export",
-    title: "LinkedIn data export (ZIP)",
+    title: "LinkedIn data export (ZIP), most accurate",
     help: "Settings → Data privacy → Get a copy of your data. Only your profile files leave your device; messages and connections do not.",
     accept: ".zip,application/zip",
   },
   {
+    kind: "linkedin_pdf",
+    title: "LinkedIn profile PDF",
+    help: "On your own profile: More → Save to PDF. Quicker than the export; check the entries it adds.",
+    accept: "application/pdf,.pdf",
+  },
+  {
     kind: "resume",
     title: "Resume (PDF, optional)",
-    help: "Adds anything your LinkedIn is missing.",
+    help: "Adds anything your LinkedIn is missing. Resumes vary, so check what it adds.",
     accept: "application/pdf,.pdf",
   },
 ];

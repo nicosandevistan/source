@@ -6,8 +6,6 @@ import { requireUser } from "@/lib/auth/user";
 import { suggestAliases, tidyAliases } from "@/lib/engine/profile/aliases";
 import { defaultGroupSize } from "@/lib/engine/profile/group-size";
 import type { EntryType } from "@/lib/engine/profile/types";
-import { anthropicLlm } from "@/lib/llm/anthropic";
-import { LlmNotConfiguredError } from "@/lib/llm/types";
 import { createClient } from "@/lib/supabase/server";
 import { entryFields, firstError, uuid, voiceSampleField } from "./validation";
 
@@ -96,32 +94,21 @@ export async function confirmAllReviewed(): Promise<void> {
 
 export type AliasSuggestions = { ok: true; aliases: string[] } | { ok: false; error: string };
 
-/** Asks the LLM for alternate names. Nothing is saved until the user confirms. */
+/** Proposes alternate names from the built-in catalog. Nothing is saved until the user confirms. */
 export async function suggestEntryAliases(entryId: string): Promise<AliasSuggestions> {
   const id = uuid.safeParse(entryId);
   if (!id.success) return { ok: false, error: "Unknown entry." };
   const supabase = await db();
   const { data, error } = await supabase
     .from("profile_entries")
-    .select("type, value, details, aliases")
+    .select("type, value, aliases")
     .eq("id", id.data)
     .single();
   if (error || !data) return { ok: false, error: "Unknown entry." };
 
-  try {
-    const suggestions = await suggestAliases(anthropicLlm(), {
-      type: data.type as EntryType,
-      value: data.value,
-      details: data.details,
-    });
-    const have = new Set((data.aliases as string[]).map((a) => a.toLowerCase()));
-    return { ok: true, aliases: suggestions.filter((a) => !have.has(a.toLowerCase())) };
-  } catch (e) {
-    if (e instanceof LlmNotConfiguredError) {
-      return { ok: false, error: "Suggestions are not set up yet. You can type alternate names yourself." };
-    }
-    return { ok: false, error: "Could not get suggestions. Try again, or type them yourself." };
-  }
+  const suggestions = suggestAliases({ type: data.type as EntryType, value: data.value });
+  const have = new Set((data.aliases as string[]).map((a) => a.toLowerCase()));
+  return { ok: true, aliases: suggestions.filter((a) => !have.has(a.toLowerCase())) };
 }
 
 /** Replaces an entry's aliases with the list the user confirmed. */

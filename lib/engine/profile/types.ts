@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 /** Entry types from spec section 6 (profile_entries.type). */
 export const ENTRY_TYPES = [
   "employer",
@@ -64,19 +62,3 @@ export type ProfileEntry = {
   use_for_matching: boolean;
   needs_review: boolean;
 };
-
-/** What the LLM must return when it reads a profile PDF or resume. */
-export const extractionSchema = z.object({
-  entries: z.array(
-    z.object({
-      type: z.enum(ENTRY_TYPES),
-      value: z.string(),
-      start: z.string().nullable(),
-      end: z.string().nullable(),
-      details: z.string().nullable(),
-    }),
-  ),
-});
-export type Extraction = z.infer<typeof extractionSchema>;
-
-export const aliasSchema = z.object({ aliases: z.array(z.string()) });

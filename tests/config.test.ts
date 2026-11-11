@@ -21,7 +21,7 @@ describe("config defaults match the spec (section 14)", () => {
     expect(appConfig.discovery.PEOPLE_TTL_DAYS).toBe(30);
     expect(appConfig.drafting.DRAFT_MAX_WORDS).toBe(110);
     expect(appConfig.drafting.FOLLOWUP_MAX_WORDS).toBe(60);
-    expect(appConfig.budget.MONTHLY_BUDGET_USD_PER_USER).toBe(5);
+    expect(appConfig.budget.MONTHLY_BUDGET_USD_PER_USER).toBe(0);
   });
 
   it("hook weights and default group sizes (section 7.7)", () => {

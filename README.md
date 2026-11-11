@@ -9,7 +9,11 @@ the source of truth. Choices made where the spec was silent are in
 [DECISIONS.md](DECISIONS.md); progress is in [CHANGELOG.md](CHANGELOG.md).
 
 **Status:** milestone 0 (foundation) is on `main`. Milestone 1 (profile
-builder) is built and waiting on two hands-on checks listed in the changelog.
+builder) is built and waiting on one hands-on check listed in the changelog.
+
+**Cost:** zero. Everything runs on free tiers (Supabase Free, Vercel Hobby,
+Google sign-in, Gmail API). No language model API and no paid data services;
+see hard rule 9 in the build plan.
 
 ## Stack
 
@@ -70,12 +74,6 @@ npm run dev
 Open http://localhost:3000, choose **Get started**, and sign in. You should
 land on an empty dashboard with a link to build your profile.
 
-### 5. Turn on PDF import and name suggestions (optional)
-
-Add `ANTHROPIC_API_KEY` to `.env.local` (and to Vercel). Without it, the
-data export ZIP and adding entries by hand still work; PDF import and
-"Suggest names" show a "not set up yet" message.
-
 ## Deploying (Vercel)
 
 1. Import this GitHub repository in Vercel. Every pull request then gets its
@@ -105,8 +103,7 @@ data export ZIP and adding entries by hand still work; PDF import and
 | `config/app.ts` | Every tunable number (spec section 14) |
 | `lib/env/` | The only place environment variables are read |
 | `lib/supabase/`, `lib/auth/` | Database clients and sign-in |
-| `lib/engine/profile/` | Profile import: export CSVs, PDF text, LLM extraction, aliases |
-| `lib/llm/` | The one interface to the language model, plus a test double |
+| `lib/engine/profile/` | Profile import: export CSVs, rule-based LinkedIn PDF and resume reading, alias catalog |
 | `lib/profile/` | Profile queries, saving and server actions |
 | `lib/providers/`, `lib/outreach/`, `lib/policy/`, `jobs/` | Placeholders for later milestones |
 | `supabase/migrations/` | Database schema; every table has Row Level Security |

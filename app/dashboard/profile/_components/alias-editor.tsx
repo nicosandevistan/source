@@ -28,7 +28,7 @@ export function AliasEditor({ entryId, aliases }: { entryId: string; aliases: st
     startTransition(async () => {
       const result = await suggestEntryAliases(entryId);
       if (!result.ok) setError(result.error);
-      else if (result.aliases.length === 0) setError("No other names found.");
+      else if (result.aliases.length === 0) setError("No suggestions for this one. Type any other names it goes by.");
       else setSuggested(result.aliases);
     });
   }

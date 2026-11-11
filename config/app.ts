@@ -63,7 +63,8 @@ export const drafting = {
 } as const;
 
 export const budget = {
-  MONTHLY_BUDGET_USD_PER_USER: 5,
+  /** Zero-cost build (see DECISIONS.md, "Zero-cost build"): no paid calls, so the budget is 0. */
+  MONTHLY_BUDGET_USD_PER_USER: 0,
 } as const;
 
 /** Hook weights and default group sizes (spec section 7.7). */
@@ -106,15 +107,11 @@ export const profile = {
   MAX_UPLOAD_BYTES: 4_000_000,
   /** Largest total size of export CSV text the browser may send. */
   MAX_EXPORT_CHARS: 2_000_000,
-  /** Profile text beyond this is cut before it goes to the LLM. */
-  MAX_SOURCE_CHARS: 60_000,
   MAX_ENTRIES_PER_IMPORT: 200,
   MAX_VOICE_SAMPLES: 2,
   VOICE_SAMPLE_MIN_CHARS: 40,
   VOICE_SAMPLE_MAX_CHARS: 4_000,
-  MAX_ALIASES: 8,
-  EXTRACTION_MAX_TOKENS: 8_000,
-  ALIAS_MAX_TOKENS: 500,
+  MAX_ALIASES: 12,
 } as const;
 
 /**
@@ -136,13 +133,6 @@ export const entryTypeToHookType = {
   publication: "small_program",
   other: "employer",
 } as const satisfies Record<string, HookType>;
-
-export const models = {
-  /** Extraction, planning and drafting. */
-  MAIN: "claude-sonnet-5-5",
-  /** Cheap classification. */
-  CHEAP: "claude-haiku-5-5",
-} as const;
 
 export const featureFlags = {
   /** Milestone 8. Stays off until the owner decides (spec section 10). */
@@ -166,7 +156,6 @@ export const appConfig = {
   budget,
   hookTypes,
   scoring,
-  models,
   profile,
   entryTypeToHookType,
   featureFlags,

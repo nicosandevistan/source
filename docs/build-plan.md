@@ -1,22 +1,24 @@
 Common Thread — Build Plan (Networking Tool)
-Nov 10, 2026 · @Nico
+Nov 10, 2026 · @Nico · Revised Nov 11, 2026: zero-cost build
+Zero-cost revision (Nov 11, 2026). The owner decided that no part of the app may cost money. This overrides anything below that names a paid service. In short: no language model (LLM) API; no paid people-data, email-finding or search APIs; only free tiers (Supabase Free, Vercel Hobby, Google sign-in and Gmail API, which are free). Where the original plan used an LLM, code rules and templates do the job instead, and the user reviews the result. Where it used a paid data provider, the user's own LinkedIn connections and people they add by hand take its place. Each change is marked "Zero-cost:" in the section it affects, and DECISIONS.md records the reasoning.
 1. Instructions for the building AI
 Build Common Thread in the milestone order in section 12. Each milestone must pass its acceptance criteria and tests before the next one starts.
 How to use this spec
 • This doc is the source of truth. If something is ambiguous, pick the simplest option that respects the hard rules below, record it in DECISIONS.md, and keep going.
-• Ask the owner (Nico) before you change the stack, add a paid service, or build a feature that is not in this doc.
+• Ask the owner (Nico) before you change the stack or build a feature that is not in this doc. Never add a paid service (hard rule 9).
 • Keep README.md (setup steps), DECISIONS.md and CHANGELOG.md current.
 • Write tests with the code (section 13). A milestone with failing tests is not done.
 • All tunable numbers live in one config file (section 14), never hard-coded.
 Hard rules (never violate, even if asked later in a prompt)
 1. No LinkedIn scraping, crawling, auto-connecting, auto-messaging or background page loads. LinkedIn data enters only through (a) the user's own data export or profile PDF and (b) in milestone 8, the text of a page the user is viewing and clicks to analyze.
-2. Never invent a hook. Every hook shown to a user cites a stored source and a verbatim quote that code (not the LLM) has confirmed exists in that source.
+2. Never invent a hook. Every hook shown to a user cites a stored source and a verbatim quote that code has confirmed exists in that source.
 3. No email is sent unless the user approved that exact message.
 4. Never infer race, ethnicity, religion or any identity from names, photos or language. Affinity matching uses only self-identified public signals (section 7.6).
 5. Public and professional sources only, per the allowlist and blocklist in section 11.
 6. Enforce daily send caps and recipient cooldowns (section 8.5) on the server.
 7. Secrets live in environment variables. Never commit keys.
 8. Least-privilege Google scopes: openid, email, profile, gmail.send. No Gmail read, modify or compose scopes.
+9. Zero cost. No service that charges money or needs a payment method on file, including LLM APIs. Free tiers are allowed only if the app keeps working (degrading gracefully, never billing) when a free quota runs out.
 2. Product summary
 Common Thread (working name) tells a college student who to contact for recruiting, finds the people most likely to reply because of rare shared background, and sends short personal emails the student approves.
 The problem. Many students, especially first-generation students without a family network, do not know which firms to target, which person at a firm to contact, what to ask for, or when. Existing tools either match on school alone or send mass emails that burn out alumni.
@@ -99,40 +101,37 @@ Database, auth, files
 Supabase (Postgres, Row Level Security, Storage)
 Row Level Security (RLS) on every table
 Background jobs
-Inngest
-Discovery, deep hook search, send queue, follow-ups, daily digest
+Zero-cost: a jobs table in Supabase, run by Vercel's free cron and on request (choose at M3; Inngest only if its free tier fits)
+Discovery, deep hook search, send queue, follow-ups
 LLM
-Anthropic API: claude-sonnet-5-5 for extraction, planning and drafting; claude-haiku-5-5 for cheap classification
-All calls use structured JSON output with schema validation (zod)
+Zero-cost: none. Parsing, planning, hook finding and drafting use code rules, a hand-kept catalog and templates
 Web search
-SearchProvider interface; default = Anthropic API web search tool; alternatives Brave or Exa
+SearchProvider interface. Zero-cost: default = Manual (the user pastes links to pages about a person); a free-tier adapter may be added at M3 only if it never bills
 Results filtered through the source policy (section 11)
 Page fetching
 Own server-side fetcher
 Respects robots.txt, domain allowlist/blocklist, rate limits, stores extracted text
 People data
-PeopleProvider interface; adapters: Apollo (default), People Data Labs, Manual
-Manual = user types name, company, title and pastes profile text
+PeopleProvider interface. Zero-cost adapters: Connections (the user's own Connections.csv from their LinkedIn export) and Manual (user types name, company, title and pastes profile text)
 Email finding
-EmailFinder interface; adapters: Apollo, Hunter
+EmailFinder interface. Zero-cost adapters: Manual, Pattern (guesses the firm's usual format, always labeled "unverified"), Hunter free plan (optional; stops at its monthly quota)
 Called only for shortlisted people
 Sending
 Gmail API, gmail.send scope only
 Refresh token encrypted at rest (AES-256-GCM)
 App's own emails
-Resend
-Daily digest, intro requests, invites
+Zero-cost: none at first. The digest is an in-app "Today" page; intro requests and invites are in-app notices and share links. Resend's free tier only if needed later
 Extension (M8)
 Chrome Manifest V3, side panel, TypeScript
 Talks only to the app's API
-The app never calls a vendor directly. Each outside service has an adapter with a recorded-fixture mock, so Apollo, PDL or Hunter can be swapped without touching the engine.
+The app never calls a vendor directly. Each outside service has an adapter with a recorded-fixture mock, so a provider can be swapped without touching the engine.
 Module layout
 • app/ routes and UI
 • lib/providers/ people, email-finder and search adapters, each with a recorded-fixture mock
 • lib/engine/ profile parsing, plan generation, discovery, hook extraction, verifier, scoring, ladder
 • lib/outreach/ drafting, approval queue, Gmail sender, caps and cooldowns, follow-ups
 • lib/policy/ source policy, sensitive-data filters, limits
-• jobs/ Inngest functions
+• jobs/ background job handlers (zero-cost: run by Vercel cron or on request)
 • config/ all tunable values (section 14)
 • extension/ Chrome extension (M8)
 6. Data model
@@ -197,27 +196,28 @@ requester_id, connector_id, pooled_connection_id, note, status
 orgs / org_members
 Club mode
 name; role (admin, member)
-usage_ledger
-Cost tracking
-kind (people_search, enrich, email_lookup, web_search, llm), units, cost_usd
+free_quota_usage
+Free-tier quota tracking (zero-cost: replaces usage_ledger)
+provider, period, units_used
 audit_log
 Sends, approvals, deletions
 actor, action, target, details
 Outreach status flow: suggested → shortlisted → email_found → drafted → approved → sent → followed_up → replied → call_scheduled → call_done → thanked → referral_asked → closed. Closed carries a reason: no_reply, declined, bounced, done.
 7. Matching engine
-The engine casts a cheap wide net with structured data, then spends LLM and search budget only on the top candidates. A hook reaches the user only after code verifies its quote.
+The engine casts a wide net with structured data, then looks deeper only at the top candidates. A hook reaches the user only after code verifies its quote.
 7.1 Profile building
-• LinkedIn PDF: extract text (pdf.js or similar), then the LLM maps it to a JSON schema of entries. The user reviews every entry.
+• LinkedIn PDF: extract text with positions (pdf.js), then rules read LinkedIn's fixed "Save to PDF" layout into entries. Zero-cost: no LLM. Resumes use looser rules. The user reviews every entry, and the data export ZIP is the recommended, most accurate path.
 • LinkedIn data export ZIP: parse whichever CSVs are present (for example Profile, Positions, Education, Skills, Languages, Projects, Honors, Volunteering, Courses, Certifications, Connections). Tolerate missing files and renamed columns.
 • Entry-point prompts (shown as a checklist): high school; pre-college or summer programs; scholarships; pipeline or diversity programs; hometown; clubs and teams; affinity organizations; languages; volunteering; research labs; causes.
-• Aliases: for each entry the LLM proposes alternate names and sub-programs, and the user confirms. Example: "MIT ESP" → "MIT Educational Studies Program", "Splash", "Spark", "HSSP".
+• Aliases: for each entry the app proposes alternate names and sub-programs from a hand-kept catalog plus spelling rules (acronyms, "&"/"and", company suffixes), and the user confirms or types their own. Example: "MIT ESP" → "MIT Educational Studies Program", "Splash", "Spark", "HSSP".
 • Group size: each entry stores an estimated group size (est_group_size), with type defaults (section 7.7) the user can override ("about 40 people in my cohort").
 7.2 Plan generation
 • Input: goal, year, locations, profile entries.
-• Firms must come from the firms catalog (seed about 150 firms across consulting, banking, biotech/pharma, investing and tech). The LLM never invents a firm. A firm the user types in is added to the catalog after a provider company lookup confirms it exists.
-• Output per firm: tier (reach, target, likely), a one-line reason tied to the user's profile, the ladder (7.8), the first ask, and outreach start dates worked back from typical_application_window. Window dates are labeled "estimate" in the UI.
+• Firms must come from the firms catalog (seed about 150 firms across consulting, banking, biotech/pharma, investing and tech). A firm the user types in is added to the user's own list (zero-cost: no provider lookup).
+• Zero-cost: plan generation is rules, not an LLM. The goal text is matched to industries by keywords (and the user can tick industries directly); firms are tiered from catalog fields (selectivity, class size, whether the user's school or past employers appear in their connections).
+• Output per firm: tier (reach, target, likely), a one-line reason tied to the user's profile (from a template naming the specific overlap), the ladder (7.8), the first ask, and outreach start dates worked back from typical_application_window. Window dates are labeled "estimate" in the UI.
 7.3 Candidate discovery
-For each target firm, run up to three provider queries and dedupe:
+Zero-cost: candidates come from the user's own Connections.csv and second-degree warm paths through friend groups (M6), plus people the user adds by hand. The three queries below run over that data instead of a paid provider. For each target firm, run up to three queries and dedupe:
 1. Current company = firm AND (school in the user's schools OR past employer in the user's employers).
 2. Current company = firm AND a junior title (analyst, associate, consultant, and so on) AND started within the last 3 years.
 3. Current company = firm AND a recruiting title (recruiter, talent, campus).
@@ -227,8 +227,8 @@ Score every candidate on structured overlaps alone (same employer, school, locat
 7.5 Deep hook search (top 15 per firm)
 1. Queries: "{full name}" "{company}", plus "{full name}" "{alias}" for the user's most distinctive entries. At most 6 queries per person.
 2. Fetch: top results from allowed domains only (section 11). Store extracted text in evidence.
-3. Extract: the LLM returns JSON: a list of {profile_entry_id, hook_type, quote, url}. Instructions: only include a hook when the quote states this person's own involvement. Never include personal or sensitive details.
-4. Verify (code, not LLM):
+3. Extract (zero-cost: code, no LLM): search the stored text for each of the user's entry names and aliases; when one appears within 300 characters of the person's name, take the surrounding sentence as the quote and the entry's type as the hook type. Never include personal or sensitive details (the post-filter in section 11 applies).
+4. Verify (code):
     1. Normalize whitespace and case, then require the quote to be an exact substring of the stored text. Otherwise drop the hook.
     2. Require the person's full name, or last name plus first initial, within 300 characters of the quote.
     3. Identity check: the page must also mention the person's company, school or city from the provider record. Otherwise set identity_confirmed = false and hide the hook by default.
@@ -284,7 +284,7 @@ For each firm, choose:
 3. Recruiter: the campus recruiter (no hook needed), contacted through official channels.
 If a rung is empty, say so and suggest the manual add flow.
 7.9 Email lookup
-Call the EmailFinder only after the user shortlists a person. Accept only deliverable or verified results. Otherwise mark "no email found" and let the user enter one manually.
+Call the EmailFinder only after the user shortlists a person. Zero-cost order: an email the user enters, then the Hunter free plan while its monthly quota lasts (verified results only), then a pattern guess clearly labeled "unverified, check before sending". Otherwise mark "no email found" and let the user enter one manually.
 8. Outreach: drafting, sending, tracking
 Drafts live in the app. The user approves each exact message, and approved messages send from the user's Gmail through a queue that enforces caps, cooldowns and send windows.
 8.1 Drafting rules
@@ -292,8 +292,8 @@ Drafts live in the app. The user approves each exact message, and approved messa
 • Structure: who I am (1 line) → the hook (1 line, from a verified hook only, phrased naturally) → why this person (1 line) → the ask (a 15–20 minute chat) → sign-off with school and LinkedIn URL.
 • Exactly one ask. No referral request in a first email. No attachments.
 • Banned phrases list in config (for example "I hope this email finds you well", "pick your brain", "I came across your profile").
-• Match the user's voice samples. Generate two variants; the user picks and edits.
-• Code checks after generation: word count, banned phrases, exactly one question mark in the ask line, and the hook sentence must reference a verified hook's entry. Fail → regenerate once, then show the draft with a warning.
+• Zero-cost: drafts come from templates, not an LLM. Two variants per person from a small template set (by hook type and ask), filled with the verified hook, the person's role and the user's details. The user's voice samples set the greeting and sign-off. The user picks and edits.
+• Code checks after filling: word count, banned phrases, exactly one question mark in the ask line, and the hook sentence must reference a verified hook's entry. Fail → show the draft with a warning.
 8.2 Approval screen
 • Each draft shows the person, the hook with its evidence link, and the editable text.
 • "Approve" one at a time or "Approve all shown". Every message is still displayed in full first.
@@ -306,7 +306,7 @@ Drafts live in the app. The user approves each exact message, and approved messa
 8.4 Replies, follow-ups, digest
 • The app cannot read the inbox, so the user marks Replied, Bounced or Declined with one click in the tracker.
 • If an email is not marked replied after 7 business days, draft one follow-up (under 60 words) for approval. Maximum one follow-up per contact.
-• Daily digest email (via Resend) at 8 a.m. user time lists follow-ups due, calls coming up, and thank-yous owed. Skip the digest when nothing is due.
+• Daily digest (zero-cost: an in-app "Today" page, not an email) lists follow-ups due, calls coming up, and thank-yous owed.
 8.5 Guardrails (server-enforced)
 • Daily cap: 8 first-touch emails per user per day by default (config 1–15).
 • Send window: weekdays 8 a.m.–6 p.m. in the recipient's time zone if known, otherwise the user's. Space sends at least 4 minutes apart.
@@ -315,7 +315,7 @@ Drafts live in the app. The user approves each exact message, and approved messa
 • No duplicates: one open outreach per user per recipient.
 8.6 Tracker and after-call
 • Table and board views by status with next action and due date.
-• Prep pack (on "call scheduled"): the person's public professional background with sources, 3 recent firm news items with links, and 5 tailored questions.
+• Prep pack (on "call scheduled"): the person's public professional background with sources (from pages the user saved), links to the firm's news page, and 5 questions built from templates and the person's hooks.
 • After the call: notes field; thank-you draft due within 24 hours; referral-ask draft unlocks only when status is call_done and the firm's application window starts within 30 days.
 9. Friend networks and club mode
 Warm intros come from friends who opt in. Nothing about a friend's network is visible beyond the share level they choose, and every intro needs the friend's approval.
@@ -330,7 +330,7 @@ Warm intros come from friends who opt in. Nothing about a friend's network is vi
 9.2 Intro requests
 1. On a firm page, "Friends who know someone here" lists matches from pooled connections.
 2. The requester writes a short note on why they want the intro.
-3. The connector gets an in-app request and an email. They can approve or decline; declines are silent to the requester (shown as "not available").
+3. The connector gets an in-app request (zero-cost: no notification email). They can approve or decline; declines are silent to the requester (shown as "not available").
 4. On approval, the app drafts a forwardable intro email for the connector to send from their own Gmail. The template suggests asking the contact first (a double opt-in intro).
 5. The resulting outreach appears in the requester's tracker as "intro pending".
 9.3 Club mode
@@ -358,7 +358,7 @@ Source policy (enforced in lib/policy/)
 • Respect robots.txt. At most 1 request per second per domain.
 Never store or show
 • Home address, personal phone, family members, health, religion, politics, sexual orientation, immigration status, or personal social media.
-• The extraction prompt excludes these, and a code post-filter drops hooks that contain street addresses or phone numbers.
+• A code post-filter drops hooks that contain street addresses, phone numbers or these topics.
 Retention and user rights
 • people and evidence rows expire after 30 days unless tied to an outreach the user started.
 • Users can export their data and delete their account; deletion removes all their rows, uploads and tokens.
@@ -380,8 +380,8 @@ Repo, Next.js app, Supabase project, Google sign-in (basic scopes), RLS scaffold
 [ ] A user can sign in and sees an empty dashboard.
 [ ] CI is green; secrets come only from environment variables.
 M1 — Profile builder
-PDF and ZIP import, LLM extraction, review UI, entry-point prompts, aliases, group sizes, voice samples.
-[ ] The owner's LinkedIn PDF produces his positions and education with no missing or invented entries (checked by hand).
+PDF and ZIP import, rule-based PDF reading (no LLM), review UI, entry-point prompts, catalog aliases, group sizes, voice samples.
+[ ] The owner's LinkedIn PDF produces his positions and education with no missing or invented entries (checked by hand; a wrong split the owner can fix in review is acceptable, a missing or invented entry is not).
 [ ] A ZIP missing some CSVs still imports without errors.
 [ ] Adding "MIT ESP" by hand yields alias suggestions including "Educational Studies Program".
 M2 — Plan
@@ -389,16 +389,17 @@ Goal intake, seeded firm catalog, plan generation, plan editing.
 [ ] The goal "consulting or finance, idk" returns 5–8 firms, all from the catalog, each with a reason tied to the profile.
 [ ] Each firm shows its ladder rules, first ask and estimated timeline labeled "estimate".
 M3 — Discovery, hooks and scoring
-Provider adapters with mocks, discovery queries, shallow scoring, deep hook search, verifier, rarity scoring, ladder, people list UI with evidence links, usage ledger.
+Connections and Manual adapters with mocks, discovery queries, shallow scoring, hook finding on saved pages, verifier, rarity scoring, ladder, people list UI with evidence links.
 [ ] Every displayed hook has a verified quote and a working evidence link.
 [ ] The golden test (section 13) passes.
-[ ] Usage ledger records every paid call; the monthly budget guard stops deep dives when exceeded.
+[ ] No code path calls a paid service; free-tier quotas (if any adapter uses one) stop cleanly when used up.
 M4 — Outreach
 Email lookup, drafting, approval screen, Gmail sending, send queue, tracker, follow-ups, digest, caps and cooldowns.
 [ ] An approved email arrives in a test inbox from the user's Gmail.
 [ ] The 9th first-touch email in a day is held until the next day.
 [ ] A second test user cannot first-touch a recipient contacted 3 days earlier, and sees the next ladder candidate instead.
 [ ] With a mocked clock, a follow-up draft appears after 7 business days with no reply.
+[ ] Every draft comes from a template and passes the draft checks with no LLM call.
 M5 — Prep and after-call
 [ ] A prep pack has sources for every fact and 5 questions.
 [ ] The referral-ask draft stays locked until call_done and the 30-day window condition.
@@ -428,17 +429,17 @@ Integration tests
 • Each provider adapter against recorded fixtures.
 • End-to-end with mocks: profile → plan → discovery → draft → approve → send (Gmail mocked).
 • RLS: user A cannot read user B's rows; group share levels; club dashboard counts only.
-LLM evaluation set
-• 20 labeled cases (profile, person, fetched pages), each with true hooks and decoys.
+Hook-finding evaluation set
+• 20 labeled cases (profile, person, saved pages), each with true hooks and decoys.
 • Targets: 95% or higher precision of hooks shown to users, 70% or higher recall, and zero unverified hooks reaching the UI.
-• Re-run on every prompt or model change; store results in evals/results/.
+• Re-run on every change to the hook rules or alias catalog; store results in evals/results/.
 Golden test (manual, live APIs)
-• Use the owner's real profile and a real contact known to have taught at MIT ESP, where the owner took a class. Do not mention the connection in any prompt or config.
+• Use the owner's real profile and a real contact known to have taught at MIT ESP, where the owner took a class. Do not mention the connection in any config or fixture.
 • Pass = the engine surfaces the MIT ESP hook with a working evidence link.
 Before inviting testers
 • Manual QA checklist: sign-up to first sent email under 15 minutes; mobile browser layout; account deletion removes everything.
 14. Configuration, costs and environment variables
-All limits and weights live in config/app.ts with the defaults below. Every paid call writes to usage_ledger, and a per-user monthly budget stops deep dives when reached.
+All limits and weights live in config/app.ts with the defaults below. Zero-cost: there are no paid calls, so the budget is 0 and no usage ledger is needed; free-tier quotas are tracked per adapter.
 Key
 Default
 Notes
@@ -476,16 +477,16 @@ DRAFT_MAX_WORDS
 110
 Follow-ups: 60
 MONTHLY_BUDGET_USD_PER_USER
-5
-Budget guard
+0
+Zero-cost build
 Scoring weights
 Section 7.7
 All weights and default group sizes
-Environment variables: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, APOLLO_API_KEY, PDL_API_KEY (optional), HUNTER_API_KEY (optional), GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, TOKEN_ENCRYPTION_KEY, INNGEST_EVENT_KEY, INNGEST_SIGNING_KEY, RESEND_API_KEY, APP_BASE_URL.
-Data costs to plan for (researched November 2026; confirm before building):
-• Apollo charges 1 credit per email lookup (xpay). Reports disagree on which plans include API access, so confirm with Apollo first (Cleanlist).
-• People Data Labs' free tier obscures contact fields; the Pro plan has a $100/month minimum (ZoomInfo review).
-• Hunter's free tier covers 25 email searches a month (StartupHub).
+Environment variables: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, HUNTER_API_KEY (optional, free plan), GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, TOKEN_ENCRYPTION_KEY, APP_BASE_URL.
+Free-tier limits to plan for (researched November 2026; confirm before building):
+• Supabase Free: no card, 500 MB database, 2 active projects; a project with little activity for a week is paused (restore free from the dashboard, or keep it awake with a scheduled ping).
+• Vercel Hobby: free for personal, non-commercial use. Charging for the app would need the paid plan.
+• Hunter free plan: about 50 credits a month.
 • Gmail scope tiers: Google's Gmail API scopes page; testing mode allows up to 100 test users (Unipile).
 15. Open decisions and defaults chosen
 The building AI should proceed with these defaults. The owner can change any of them; changes go in DECISIONS.md.
@@ -496,17 +497,17 @@ Product name
 Common Thread (working name)
 Final name and domain
 People data provider
-Apollo first, People Data Labs adapter second
-Whether the Apollo plan includes API access
+Zero-cost: Connections.csv and Manual (no paid provider)
+Decided Nov 11, 2026
 Beta budget
-About $100/month total for data and LLM
-Monthly ceiling
+$0. No paid services
+Decided Nov 11, 2026
 Who can sign up
 Invite-only, up to 100 Google test users
 When to apply for Google verification
 Hosting
-Vercel and Supabase starting tiers
-Upgrade trigger
+Vercel Hobby and Supabase Free
+Revisit only if the app ever charges money
 Sending accounts
 Gmail and Google Workspace only
 Whether Outlook is needed for school accounts
