@@ -33,7 +33,7 @@ describe("database: migrations apply to a real Postgres", () => {
   it("every public table has Row Level Security on", async () => {
     const tables = await t.tables();
     expect(tables.map((x) => x.tablename)).toEqual(
-      expect.arrayContaining(["users", "audit_log", "profile_entries", "voice_samples"]),
+      expect.arrayContaining(["users", "audit_log", "profile_entries", "voice_samples", "goals", "plans", "plan_targets"]),
     );
     expect(tables.filter((x) => !x.rowsecurity)).toEqual([]);
   });
@@ -168,13 +168,78 @@ describe("database constraints", () => {
   });
 });
 
+describe("RLS: goals, plans and plan targets (milestone 2)", () => {
+  let goalA: string;
+  let planA: string;
+
+  beforeAll(async () => {
+    goalA = await t.as("authenticated", A, async (run) => {
+      const rows = await run<{ id: string }>(
+        `insert into goals (raw_text, industries, year) values ('consulting or finance, idk', '{consulting}', 2028) returning id`,
+      );
+      return rows[0].id;
+    });
+    planA = await t.as("authenticated", A, async (run) => {
+      const rows = await run<{ id: string }>(`insert into plans (goal_id) values ($1) returning id`, [goalA]);
+      await run(
+        `insert into plan_targets (plan_id, firm_slug, name, tier, rationale, priority)
+         values ($1, 'bcg', 'Boston Consulting Group', 'reach', 'reason', 0)`,
+        [rows[0].id],
+      );
+      return rows[0].id;
+    });
+  });
+
+  it("the owner sees their goal, plan and targets; another user sees none", async () => {
+    const own = await t.as("authenticated", A, (run) => run(`select name from plan_targets`));
+    expect(own).toEqual([{ name: "Boston Consulting Group" }]);
+    for (const table of ["goals", "plans", "plan_targets"]) {
+      const other = await t.as("authenticated", B, (run) => run(`select id from ${table}`));
+      expect(other, table).toEqual([]);
+    }
+  });
+
+  it("another user cannot attach a plan to A's goal or a target to A's plan", async () => {
+    await expect(
+      t.as("authenticated", B, (run) => run(`insert into plans (goal_id) values ($1)`, [goalA])),
+    ).rejects.toThrow(/row-level security/);
+    await expect(
+      t.as("authenticated", B, (run) =>
+        run(`insert into plan_targets (plan_id, name, priority) values ($1, 'x', 0)`, [planA]),
+      ),
+    ).rejects.toThrow(/row-level security/);
+  });
+
+  it("another user cannot change or remove A's targets", async () => {
+    const updated = await t.as("authenticated", B, (run) =>
+      run(`update plan_targets set name = 'x' where plan_id = $1 returning id`, [planA]),
+    );
+    const deleted = await t.as("authenticated", B, (run) =>
+      run(`delete from plan_targets where plan_id = $1 returning id`, [planA]),
+    );
+    expect(updated).toEqual([]);
+    expect(deleted).toEqual([]);
+  });
+
+  it("tier must be reach, target, likely or empty", async () => {
+    await expect(
+      t.as("authenticated", A, (run) =>
+        run(`insert into plan_targets (plan_id, name, tier, priority) values ($1, 'x', 'dream', 1)`, [planA]),
+      ),
+    ).rejects.toThrow(/check constraint/);
+  });
+});
+
 describe("account deletion", () => {
   it("removing the account removes every row the user owns", async () => {
     await t.db.query(`delete from auth.users where id = $1`, [A]);
     const left = await t.db.query<{ n: number }>(
       `select (select count(*) from users where id = $1)
             + (select count(*) from profile_entries where user_id = $1)
-            + (select count(*) from voice_samples where user_id = $1) as n`,
+            + (select count(*) from voice_samples where user_id = $1)
+            + (select count(*) from goals where user_id = $1)
+            + (select count(*) from plans where user_id = $1)
+            + (select count(*) from plan_targets where user_id = $1) as n`,
       [A],
     );
     expect(Number(left.rows[0].n)).toBe(0);
