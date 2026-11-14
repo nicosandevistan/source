@@ -57,14 +57,20 @@ describe("secrets (hard rule 7)", () => {
       const isClient = /^\s*["']use client["']/.test(text);
       return (
         isClient &&
-        /from ["']@\/lib\/(env\/server|supabase\/server|auth\/user)["']/.test(text)
+        /from ["']@\/lib\/(env\/server|supabase\/server|auth\/user|profile\/(queries|save))["']/.test(text)
       );
     });
     expect(offenders).toEqual([]);
   });
 
   it("modules that can see server secrets are marked server-only", () => {
-    for (const file of ["lib/env/server.ts", "lib/supabase/server.ts", "lib/auth/user.ts"]) {
+    for (const file of [
+      "lib/env/server.ts",
+      "lib/supabase/server.ts",
+      "lib/auth/user.ts",
+      "lib/profile/queries.ts",
+      "lib/profile/save.ts",
+    ]) {
       expect(read(file), file).toMatch(/^import "server-only";/);
     }
   });

@@ -63,7 +63,8 @@ export const drafting = {
 } as const;
 
 export const budget = {
-  MONTHLY_BUDGET_USD_PER_USER: 5,
+  /** Zero-cost build (see DECISIONS.md, "Zero-cost build"): no paid calls, so the budget is 0. */
+  MONTHLY_BUDGET_USD_PER_USER: 0,
 } as const;
 
 /** Hook weights and default group sizes (spec section 7.7). */
@@ -100,12 +101,38 @@ export const scoring = {
   BUSY_WINDOW_DAYS: 60,
 } as const;
 
-export const models = {
-  /** Extraction, planning and drafting. */
-  MAIN: "claude-sonnet-5-5",
-  /** Cheap classification. */
-  CHEAP: "claude-haiku-5-5",
+/** Profile builder (milestone 1). */
+export const profile = {
+  /** Largest PDF the import endpoint accepts. */
+  MAX_UPLOAD_BYTES: 4_000_000,
+  /** Largest total size of export CSV text the browser may send. */
+  MAX_EXPORT_CHARS: 2_000_000,
+  MAX_ENTRIES_PER_IMPORT: 200,
+  MAX_VOICE_SAMPLES: 2,
+  VOICE_SAMPLE_MIN_CHARS: 40,
+  VOICE_SAMPLE_MAX_CHARS: 4_000,
+  MAX_ALIASES: 12,
 } as const;
+
+/**
+ * Which hook type supplies the default group size for each kind of
+ * profile entry (the user can override the number per entry).
+ */
+export const entryTypeToHookType = {
+  employer: "employer",
+  school: "college",
+  program: "small_program",
+  scholarship: "small_program",
+  club: "small_program",
+  affinity_org: "affinity_org",
+  hometown: "hometown",
+  high_school: "high_school",
+  language: "language",
+  interest: "interest",
+  volunteer: "affinity_org",
+  publication: "small_program",
+  other: "employer",
+} as const satisfies Record<string, HookType>;
 
 export const featureFlags = {
   /** Milestone 8. Stays off until the owner decides (spec section 10). */
@@ -129,7 +156,8 @@ export const appConfig = {
   budget,
   hookTypes,
   scoring,
-  models,
+  profile,
+  entryTypeToHookType,
   featureFlags,
   googleScopes,
 } as const;

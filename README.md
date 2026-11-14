@@ -8,8 +8,12 @@ The full specification is in [docs/build-plan.md](docs/build-plan.md). It is
 the source of truth. Choices made where the spec was silent are in
 [DECISIONS.md](DECISIONS.md); progress is in [CHANGELOG.md](CHANGELOG.md).
 
-**Status:** milestone 0 (foundation) is built. A user can sign in with Google
-and sees an empty dashboard.
+**Status:** milestone 0 (foundation) is on `main`. Milestone 1 (profile
+builder) is built and waiting on one hands-on check listed in the changelog.
+
+**Cost:** zero. Everything runs on free tiers (Supabase Free, Vercel Hobby,
+Google sign-in, Gmail API). No language model API and no paid data services;
+see hard rule 9 in the build plan.
 
 ## Stack
 
@@ -33,14 +37,17 @@ cp .env.example .env.local
 2. In **Project Settings → API**, copy the project URL and the anon (public)
    key into `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and
    `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-3. Run the database migration. Either paste
-   `supabase/migrations/20261110000000_m0_foundation.sql` into the SQL editor,
-   or use the Supabase command-line tool:
+3. Run the database migrations. Either paste each file in
+   `supabase/migrations/` into the SQL editor in name order, or use the
+   Supabase command-line tool:
 
    ```bash
    npx supabase link --project-ref <your-project-ref>
    npx supabase db push
    ```
+
+   Run every file in `supabase/migrations/` in name order. Re-run
+   `db push` whenever a new migration appears.
 
 ### 3. Turn on Google sign-in
 
@@ -65,7 +72,7 @@ npm run dev
 ```
 
 Open http://localhost:3000, choose **Get started**, and sign in. You should
-land on an empty dashboard.
+land on an empty dashboard with a link to build your profile.
 
 ## Deploying (Vercel)
 
@@ -96,9 +103,11 @@ land on an empty dashboard.
 | `config/app.ts` | Every tunable number (spec section 14) |
 | `lib/env/` | The only place environment variables are read |
 | `lib/supabase/`, `lib/auth/` | Database clients and sign-in |
-| `lib/engine/`, `lib/providers/`, `lib/outreach/`, `lib/policy/`, `jobs/` | Placeholders for later milestones |
+| `lib/engine/profile/` | Profile import: export CSVs, rule-based LinkedIn PDF and resume reading, alias catalog |
+| `lib/profile/` | Profile queries, saving and server actions |
+| `lib/providers/`, `lib/outreach/`, `lib/policy/`, `jobs/` | Placeholders for later milestones |
 | `supabase/migrations/` | Database schema; every table has Row Level Security |
-| `tests/` | Vitest tests |
+| `tests/` | Vitest tests; `tests/db/` runs the migrations on an in-process Postgres |
 
 ## Rules for contributors (people and AI)
 

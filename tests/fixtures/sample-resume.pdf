@@ -1,0 +1,65 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Length 2181 >>
+stream
+BT /F1 16 Tf 60 740 Td (JORDAN RIVERA) Tj ET
+BT /F1 9 Tf 60 719 Td (Revere, MA | jordan.rivera@example.com | \(555\) 555-0100) Tj ET
+BT /F1 13 Tf 60 695 Td (EDUCATION) Tj ET
+BT /F1 10 Tf 60 677 Td (Example State University, Amherst, MA) Tj ET
+BT /F1 10 Tf 430 677 Td (Expected May 2028) Tj ET
+BT /F1 10 Tf 60 662 Td (Bachelor of Science in Economics; GPA 3.6) Tj ET
+BT /F1 9 Tf 69 647 Td (• Honors: Riverbend Memorial Scholarship \(full-ride award\)) Tj ET
+BT /F1 10 Tf 60 633 Td (Revere High School, Revere, MA) Tj ET
+BT /F1 10 Tf 430 633 Td (2020 - 2024) Tj ET
+BT /F1 13 Tf 60 608 Td (EXPERIENCE) Tj ET
+BT /F1 10 Tf 60 590 Td (Northwind Biotech) Tj ET
+BT /F1 10 Tf 430 590 Td (Boston, MA) Tj ET
+BT /F1 10 Tf 60 575 Td (Strategy Intern) Tj ET
+BT /F1 10 Tf 430 575 Td (Jun. 2026 - Aug. 2026) Tj ET
+BT /F1 9 Tf 69 560 Td (• Built a market model for a rare disease program with PhD candidate) Tj ET
+BT /F1 9 Tf 83 546 Td (Alex Smith; presented findings to the head of strategy) Tj ET
+BT /F1 9 Tf 69 532 Td (• Ran an RNA-seq pipeline \(STAR alignment, DESeq2 differential expression,) Tj ET
+BT /F1 9 Tf 83 518 Td (GOseq pathway enrichment\) to find shifts in microgravity) Tj ET
+BT /F1 10 Tf 60 504 Td (Example Consulting Group) Tj ET
+BT /F1 10 Tf 430 504 Td (Amherst, MA) Tj ET
+BT /F1 10 Tf 60 489 Td (Junior Analyst) Tj ET
+BT /F1 10 Tf 430 489 Td (Sep 2025 - Present) Tj ET
+BT /F1 9 Tf 69 474 Td (• Sized the market for a regional health system.) Tj ET
+BT /F1 13 Tf 60 450 Td (LEADERSHIP & PROJECTS) Tj ET
+BT /F1 10 Tf 60 432 Td (Latin American Business Society | Treasurer) Tj ET
+BT /F1 10 Tf 430 432 Td (Jan 2025 - Present) Tj ET
+BT /F1 9 Tf 69 417 Td (• Managed a budget for 12 events.) Tj ET
+BT /F1 10 Tf 60 403 Td (iGEM Example Team | Vice President) Tj ET
+BT /F1 10 Tf 430 403 Td (Dec 2023 - Aug 2024) Tj ET
+BT /F1 9 Tf 69 388 Td (• Led design of 3 plasmid constructs for the largest bioengineering) Tj ET
+BT /F1 9 Tf 83 374 Td (competition \(150+ university teams\)) Tj ET
+BT /F1 13 Tf 60 350 Td (SKILLS & INTERESTS) Tj ET
+BT /F1 9 Tf 60 332 Td (Technical: Excel, R, Python) Tj ET
+BT /F1 9 Tf 60 318 Td (Languages: English and Spanish \(bilingual\), Portuguese, French) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000212 00000 n 
+0000002445 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2571
+%%EOF

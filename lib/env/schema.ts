@@ -17,10 +17,7 @@ export const serverEnvSchema = publicEnvSchema.extend({
   APP_BASE_URL: z.url(),
   // Milestone 1+
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
-  ANTHROPIC_API_KEY: z.string().min(1).optional(),
-  // Milestone 3+
-  APOLLO_API_KEY: z.string().min(1).optional(),
-  PDL_API_KEY: z.string().min(1).optional(),
+  // Milestone 3+ (free tiers only; see DECISIONS.md, "Zero-cost build")
   HUNTER_API_KEY: z.string().min(1).optional(),
   INNGEST_EVENT_KEY: z.string().min(1).optional(),
   INNGEST_SIGNING_KEY: z.string().min(1).optional(),
