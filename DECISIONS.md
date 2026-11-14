@@ -3,6 +3,54 @@
 Choices made where the build plan was silent or ambiguous. Newest first.
 The owner (Nico) can overrule any of these.
 
+## Milestone 2 (2026-11-14)
+
+1. **The firm catalog lives in code, not a database table.**
+   `lib/engine/plan/catalog.ts` holds 184 firms across consulting, banking,
+   investing, biotech/pharma and tech. Keeping it in code makes it free,
+   reviewable in pull requests and testable. Plans store the firm's slug.
+   The spec's `firms` table is not created; it can be added later if users
+   need to share added firms.
+
+2. **A broad catalog, not one tailored to the owner.** The owner asked for
+   it to work for any student, so every industry has at least 15 firms and
+   every selectivity level is covered.
+
+3. **A typed-in firm that is not in the catalog is the user's own pick.**
+   The spec says to confirm it with a provider company lookup. That needs a
+   paid data provider, so instead it is kept by name, labeled "Your pick",
+   and the reason tells the user to check its dates themselves. The plan
+   never suggests a firm on its own that is not in the catalog.
+
+4. **Plan generation is rules (zero-cost).**
+   - Goal text is matched to industries by keywords ("finance" means
+     banking and investing). If nothing matches, every industry is used.
+   - A firm's tier comes from its catalog selectivity. It moves one step
+     easier when the user already has a way in, meaning a profile entry
+     names the firm.
+   - Picks fill quotas of 2 reach, 3 target and 2 likely (in config),
+     rotating across industries. Ranking favors named firms, ways in,
+     healthcare-focused firms (when the goal or profile leans that way) and
+     preferred locations.
+   - Reasons come from templates that always name a specific profile entry
+     (or the user's school if nothing else fits), with varied wording.
+
+5. **Selectivity and application windows are rough estimates.** Selectivity
+   (1–3) is a public-reputation judgment used only to spread tiers.
+   Windows are per segment, not per firm, and the UI labels every date an
+   estimate. Outreach starts 8 weeks before a window opens (in config).
+
+6. **Firm locations are the main US office.** For firms based abroad
+   (Takeda, Novartis, Barclays and others), the city shown and matched is
+   their US base, because the users are US students.
+
+7. **One current plan.** Building a plan from a new goal makes it the
+   current one; older plans stay in the database, unused, for now.
+
+8. **The ladder and first ask are the same for every firm** (spec 7.8 and
+   section 3B), so they are shown once below the firm list rather than
+   repeated on every card.
+
 ## Zero-cost build (2026-11-11)
 
 The owner decided that no part of the app may cost money. This is now hard
