@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { displayRange } from "@/lib/engine/profile/dates";
 import { ENTRY_TYPE_LABELS, type ProfileEntry } from "@/lib/engine/profile/types";
 import { deleteEntry, setUseForMatching } from "@/lib/profile/actions";
 import { AliasEditor } from "./alias-editor";
@@ -12,9 +13,7 @@ const SOURCE_LABELS: Record<ProfileEntry["source"], string> = {
 };
 
 export function EntryCard({ entry }: { entry: ProfileEntry }) {
-  const dates = [entry.start_date, entry.end_date ?? (entry.start_date ? "present" : null)]
-    .filter(Boolean)
-    .join(" – ");
+  const dates = displayRange(entry.start_date, entry.end_date);
 
   return (
     <li className="rounded-md border border-neutral-200 bg-white p-3">

@@ -92,3 +92,25 @@ export function isDateLine(line: string): boolean {
 export function isDurationLine(line: string): boolean {
   return /^(?:\d+\s+(?:years?|yrs?)(?:\s+\d+\s+(?:months?|mos?))?|\d+\s+(?:months?|mos?))$/i.test(line.trim());
 }
+
+const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "2026-11" → "Nov 2026"; "2028" stays "2028". */
+export function displayDate(stored: string | null): string | null {
+  if (!stored) return null;
+  const m = /^(\d{4})-(\d{2})$/.exec(stored);
+  return m ? `${MONTH_ABBR[Number(m[2]) - 1]} ${m[1]}` : stored;
+}
+
+/**
+ * Human date range for an entry: "Jun 2025 – Aug 2025", "Nov 2026 – present"
+ * (start only), "until 2028" (end only, as education often is).
+ */
+export function displayRange(start: string | null, end: string | null): string | null {
+  const s = displayDate(start);
+  const e = displayDate(end);
+  if (s && e) return s === e ? s : `${s} – ${e}`;
+  if (s) return `${s} – present`;
+  if (e) return `until ${e}`;
+  return null;
+}

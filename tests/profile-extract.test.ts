@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hookTypes, profile } from "@/config/app";
 import { acronymOf, suggestAliases, tidyAliases } from "@/lib/engine/profile/aliases";
-import { findDateRange, isDateLine, isDurationLine } from "@/lib/engine/profile/dates";
+import { displayRange, findDateRange, isDateLine, isDurationLine } from "@/lib/engine/profile/dates";
 import { dedupe } from "@/lib/engine/profile/dedupe";
 import { extractEntries } from "@/lib/engine/profile/extract";
 import { defaultGroupSize } from "@/lib/engine/profile/group-size";
@@ -48,6 +48,14 @@ describe("dates in lines", () => {
     expect(findDateRange("Expected May 2028")?.range).toEqual({ start: null, end: "2028-05" });
     expect(findDateRange("Summer 2025 - Fall 2025")?.range).toEqual({ start: "2025-06", end: "2025-09" });
     expect(findDateRange("Treasurer")).toBeNull();
+  });
+
+  it("shows stored dates in plain words", () => {
+    expect(displayRange("2025-06", "2025-08")).toBe("Jun 2025 – Aug 2025");
+    expect(displayRange("2026-11", null)).toBe("Nov 2026 – present");
+    expect(displayRange(null, "2028")).toBe("until 2028");
+    expect(displayRange("2022", "2022")).toBe("2022");
+    expect(displayRange(null, null)).toBeNull();
   });
 
   it("tells date lines, tenure lines and locations apart", () => {
