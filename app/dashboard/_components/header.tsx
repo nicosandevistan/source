@@ -14,6 +14,9 @@ export function DashboardHeader() {
         <Link href="/dashboard/profile" className="text-neutral-600 hover:text-neutral-900">
           Profile
         </Link>
+        <Link href="/dashboard/plan" className="text-neutral-600 hover:text-neutral-900">
+          Plan
+        </Link>
       </nav>
       <div className="flex items-center gap-3">
         <Suspense fallback={null}>

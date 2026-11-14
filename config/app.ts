@@ -47,6 +47,14 @@ export const plan = {
   MAX_TARGET_FIRMS: 8,
   FIRST_ASK_MINUTES_MIN: 15,
   FIRST_ASK_MINUTES_MAX: 20,
+  /** How many firms of each tier a new plan aims for (5–8 in total). */
+  TIER_QUOTAS: { reach: 2, target: 3, likely: 2 },
+  /** Start reaching out this many weeks before applications usually open. */
+  OUTREACH_LEAD_WEEKS: 8,
+  /** Longest goal text and the most locations or named firms kept. */
+  GOAL_MAX_CHARS: 1_000,
+  MAX_LOCATIONS: 5,
+  MAX_KNOWN_FIRMS: 8,
 } as const;
 
 export const drafting = {
