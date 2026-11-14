@@ -80,7 +80,7 @@ export type Firm = {
   name: string;
   segment: Segment;
   selectivity: 1 | 2 | 3;
-  /** Headquarters city. */
+  /** Main US office, or the headquarters city when the firm has no US base. */
   hq: string;
   /** True when the firm has offices in most major US cities. */
   national?: boolean;
@@ -150,9 +150,9 @@ export const FIRMS: Firm[] = [
   { slug: "jpmorgan", name: "J.P. Morgan", segment: "bulge_bracket", selectivity: 1, hq: "New York", national: true, aliases: ["JPMorgan", "JPMorgan Chase", "JPMorgan Chase & Co."] },
   { slug: "bofa", name: "Bank of America", segment: "bulge_bracket", selectivity: 2, hq: "Charlotte", national: true, aliases: ["BofA", "BofA Securities"] },
   { slug: "citi", name: "Citi", segment: "bulge_bracket", selectivity: 2, hq: "New York", national: true, aliases: ["Citigroup", "Citibank"] },
-  { slug: "barclays", name: "Barclays", segment: "bulge_bracket", selectivity: 2, hq: "London", national: true },
-  { slug: "ubs", name: "UBS", segment: "bulge_bracket", selectivity: 2, hq: "Zurich", national: true },
-  { slug: "deutsche-bank", name: "Deutsche Bank", segment: "bulge_bracket", selectivity: 2, hq: "Frankfurt", national: true },
+  { slug: "barclays", name: "Barclays", segment: "bulge_bracket", selectivity: 2, hq: "New York", national: true },
+  { slug: "ubs", name: "UBS", segment: "bulge_bracket", selectivity: 2, hq: "New York", national: true },
+  { slug: "deutsche-bank", name: "Deutsche Bank", segment: "bulge_bracket", selectivity: 2, hq: "New York", national: true },
   { slug: "wells-fargo", name: "Wells Fargo", segment: "bulge_bracket", selectivity: 2, hq: "San Francisco", national: true },
 
   // Elite boutiques
@@ -172,7 +172,7 @@ export const FIRMS: Firm[] = [
   { slug: "piper-sandler", name: "Piper Sandler", segment: "middle_market_bank", selectivity: 3, hq: "Minneapolis", national: true },
   { slug: "william-blair", name: "William Blair", segment: "middle_market_bank", selectivity: 3, hq: "Chicago" },
   { slug: "houlihan-lokey", name: "Houlihan Lokey", segment: "middle_market_bank", selectivity: 2, hq: "Los Angeles", national: true, aliases: ["Houlihan"] },
-  { slug: "rbc", name: "RBC Capital Markets", segment: "middle_market_bank", selectivity: 2, hq: "Toronto", national: true, aliases: ["RBC"] },
+  { slug: "rbc", name: "RBC Capital Markets", segment: "middle_market_bank", selectivity: 2, hq: "New York", national: true, aliases: ["RBC"] },
   { slug: "baird", name: "Robert W. Baird", segment: "middle_market_bank", selectivity: 3, hq: "Milwaukee", aliases: ["Baird"] },
   { slug: "harris-williams", name: "Harris Williams", segment: "middle_market_bank", selectivity: 2, hq: "Richmond" },
   { slug: "lincoln", name: "Lincoln International", segment: "middle_market_bank", selectivity: 3, hq: "Chicago" },
@@ -228,9 +228,9 @@ export const FIRMS: Firm[] = [
   { slug: "hrt", name: "Hudson River Trading", segment: "trading", selectivity: 1, hq: "New York", aliases: ["HRT"] },
   { slug: "jump", name: "Jump Trading", segment: "trading", selectivity: 1, hq: "Chicago", aliases: ["Jump"] },
   { slug: "citadel-securities", name: "Citadel Securities", segment: "trading", selectivity: 1, hq: "Miami" },
-  { slug: "optiver", name: "Optiver", segment: "trading", selectivity: 1, hq: "Amsterdam" },
+  { slug: "optiver", name: "Optiver", segment: "trading", selectivity: 1, hq: "Chicago" },
   { slug: "sig", name: "Susquehanna International Group", segment: "trading", selectivity: 1, hq: "Bala Cynwyd", aliases: ["SIG", "Susquehanna"] },
-  { slug: "imc", name: "IMC Trading", segment: "trading", selectivity: 1, hq: "Amsterdam", aliases: ["IMC"] },
+  { slug: "imc", name: "IMC Trading", segment: "trading", selectivity: 1, hq: "Chicago", aliases: ["IMC"] },
   { slug: "drw", name: "DRW", segment: "trading", selectivity: 1, hq: "Chicago" },
 
   // Asset management
@@ -251,24 +251,24 @@ export const FIRMS: Firm[] = [
   { slug: "pfizer", name: "Pfizer", segment: "big_pharma", selectivity: 2, hq: "New York", focus: HC },
   { slug: "jnj", name: "Johnson & Johnson", segment: "big_pharma", selectivity: 2, hq: "New Brunswick", aliases: ["J&J", "Johnson and Johnson"], focus: HC },
   { slug: "merck", name: "Merck", segment: "big_pharma", selectivity: 2, hq: "Rahway", aliases: ["MSD", "Merck & Co."], focus: HC },
-  { slug: "novartis", name: "Novartis", segment: "big_pharma", selectivity: 2, hq: "Basel", focus: HC },
+  { slug: "novartis", name: "Novartis", segment: "big_pharma", selectivity: 2, hq: "East Hanover", focus: HC },
   { slug: "genentech", name: "Genentech (Roche)", segment: "big_pharma", selectivity: 2, hq: "South San Francisco", aliases: ["Genentech", "Roche"], focus: HC },
   { slug: "abbvie", name: "AbbVie", segment: "big_pharma", selectivity: 2, hq: "North Chicago", focus: HC },
   { slug: "bms", name: "Bristol Myers Squibb", segment: "big_pharma", selectivity: 2, hq: "Princeton", aliases: ["BMS", "Bristol-Myers Squibb"], focus: HC },
   { slug: "lilly", name: "Eli Lilly and Company", segment: "big_pharma", selectivity: 2, hq: "Indianapolis", aliases: ["Lilly", "Eli Lilly"], focus: HC },
-  { slug: "astrazeneca", name: "AstraZeneca", segment: "big_pharma", selectivity: 2, hq: "Cambridge, UK", aliases: ["AZ"], focus: HC },
-  { slug: "sanofi", name: "Sanofi", segment: "big_pharma", selectivity: 2, hq: "Paris", focus: HC },
-  { slug: "gsk", name: "GSK", segment: "big_pharma", selectivity: 2, hq: "London", aliases: ["GlaxoSmithKline"], focus: HC },
-  { slug: "takeda", name: "Takeda", segment: "big_pharma", selectivity: 2, hq: "Tokyo", aliases: ["Takeda Pharmaceuticals", "Takeda Pharmaceutical Company"], focus: HC },
-  { slug: "novo-nordisk", name: "Novo Nordisk", segment: "big_pharma", selectivity: 2, hq: "Bagsværd", focus: HC },
+  { slug: "astrazeneca", name: "AstraZeneca", segment: "big_pharma", selectivity: 2, hq: "Wilmington", aliases: ["AZ"], focus: HC },
+  { slug: "sanofi", name: "Sanofi", segment: "big_pharma", selectivity: 2, hq: "Morristown", focus: HC },
+  { slug: "gsk", name: "GSK", segment: "big_pharma", selectivity: 2, hq: "Philadelphia", aliases: ["GlaxoSmithKline"], focus: HC },
+  { slug: "takeda", name: "Takeda", segment: "big_pharma", selectivity: 2, hq: "Cambridge", aliases: ["Takeda Pharmaceuticals", "Takeda Pharmaceutical Company"], focus: HC },
+  { slug: "novo-nordisk", name: "Novo Nordisk", segment: "big_pharma", selectivity: 2, hq: "Plainsboro", focus: HC },
   { slug: "amgen", name: "Amgen", segment: "big_pharma", selectivity: 2, hq: "Thousand Oaks", focus: HC },
   { slug: "gilead", name: "Gilead Sciences", segment: "big_pharma", selectivity: 2, hq: "Foster City", aliases: ["Gilead"], focus: HC },
   { slug: "regeneron", name: "Regeneron", segment: "big_pharma", selectivity: 2, hq: "Tarrytown", focus: HC },
   { slug: "vertex", name: "Vertex Pharmaceuticals", segment: "big_pharma", selectivity: 2, hq: "Boston", aliases: ["Vertex"], focus: HC },
   { slug: "biogen", name: "Biogen", segment: "big_pharma", selectivity: 2, hq: "Cambridge", focus: HC },
   { slug: "moderna", name: "Moderna", segment: "big_pharma", selectivity: 2, hq: "Cambridge", focus: HC },
-  { slug: "boehringer", name: "Boehringer Ingelheim", segment: "big_pharma", selectivity: 3, hq: "Ingelheim", focus: HC },
-  { slug: "bayer", name: "Bayer", segment: "big_pharma", selectivity: 3, hq: "Leverkusen", focus: HC },
+  { slug: "boehringer", name: "Boehringer Ingelheim", segment: "big_pharma", selectivity: 3, hq: "Ridgefield", focus: HC },
+  { slug: "bayer", name: "Bayer", segment: "big_pharma", selectivity: 3, hq: "Whippany", focus: HC },
 
   // Biotech and life science tools
   { slug: "thermo-fisher", name: "Thermo Fisher Scientific", segment: "biotech", selectivity: 3, hq: "Waltham", national: true, aliases: ["Thermo Fisher"], focus: HC },

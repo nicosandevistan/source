@@ -129,8 +129,12 @@ function byRecency(a: PlanEntry, b: PlanEntry): number {
 }
 
 function describe(entry: PlanEntry): string {
-  const hasRole = ["employer", "club", "volunteer"].includes(entry.type) && entry.details && entry.details.length <= 60;
-  return hasRole ? `${entry.details} role at ${entry.value}` : entry.value;
+  const role = entry.details?.trim();
+  // "Junior Analyst role at Example Group" reads well; a long title that has its own "at" does not.
+  if (["employer", "club", "volunteer"].includes(entry.type) && role && role.length <= 40 && !/\bat\b|@/i.test(role)) {
+    return `${role} role at ${entry.value}`;
+  }
+  return entry.type === "employer" ? `work at ${entry.value}` : entry.value;
 }
 
 type Scored = { firm: Firm; index: number; tier: Tier; score: number; warm: PlanEntry | null; known: boolean };
@@ -224,7 +228,7 @@ function rationaleFor(s: Scored, ctx: Context, position: number): string {
   const pick = <T,>(items: T[]) => items[position % items.length];
 
   if (s.warm) {
-    sentences.push(`You already have a way in through your ${describe(s.warm)}; people you worked with are your warmest first contacts.`);
+    sentences.push(`You already have a way in through your ${describe(s.warm)}; people you know there are your warmest first contacts.`);
   } else if (s.known) {
     sentences.push("You named it as a firm you want.");
   }

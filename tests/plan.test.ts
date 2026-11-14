@@ -147,6 +147,16 @@ describe("plan generation rules", () => {
     expect(result.find((t) => t.firmSlug === "takeda")?.rationale ?? "").not.toContain("way in");
   });
 
+  it("words long titles naturally", () => {
+    const entries: PlanEntry[] = [
+      { type: "employer", value: "Boston University", details: "High School Research Assistant at Wilson Wong Lab", start_date: "2023-07" },
+    ];
+    const result = generatePlan({ goal: parseGoal("biotech"), entries, locations: [], knownFirms: [] });
+    const text = result.map((t) => t.rationale).join(" ");
+    expect(text).toContain("work at Boston University");
+    expect(text).not.toContain("Wilson Wong Lab role at");
+  });
+
   it("matches firm names carefully", () => {
     const firm = (slug: string) => FIRMS.find((f) => f.slug === slug)!;
     expect(entryMatchesFirm({ type: "employer", value: "Takeda" }, firm("takeda"))).toBe(true);
