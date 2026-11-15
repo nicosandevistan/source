@@ -42,6 +42,23 @@ export const discovery = {
   FETCH_RATE_PER_DOMAIN_PER_SECOND: 1,
 } as const;
 
+/** Pages fetched as evidence about a person (milestone 3). */
+export const evidence = {
+  FETCH_TIMEOUT_MS: 10_000,
+  MAX_PAGE_BYTES: 2_000_000,
+  MAX_TEXT_CHARS: 200_000,
+  MAX_REDIRECTS: 3,
+  /** Text a user pastes about someone (from a page they read). */
+  MAX_PASTED_CHARS: 50_000,
+  MAX_PAGES_PER_PERSON: 6,
+} as const;
+
+/** People from the user's connections or added by hand (milestone 3). */
+export const people = {
+  MAX_CONNECTIONS: 30_000,
+  MAX_CONNECTIONS_CSV_CHARS: 6_000_000,
+} as const;
+
 export const plan = {
   MIN_TARGET_FIRMS: 5,
   MAX_TARGET_FIRMS: 8,
@@ -164,6 +181,8 @@ export const appConfig = {
   budget,
   hookTypes,
   scoring,
+  evidence,
+  people,
   profile,
   entryTypeToHookType,
   featureFlags,
