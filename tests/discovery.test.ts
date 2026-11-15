@@ -4,7 +4,7 @@ import { parseConnections } from "@/lib/engine/discovery/connections";
 import { classifyTitle } from "@/lib/engine/discovery/titles";
 import { htmlToText } from "@/lib/engine/evidence/html";
 import { robotsAllows } from "@/lib/engine/evidence/robots";
-import { findHooks, type HookEntry } from "@/lib/engine/hooks/find";
+import { findHooks, sentences, type HookEntry } from "@/lib/engine/hooks/find";
 import { nameMentions } from "@/lib/engine/hooks/names";
 import { hookStrength, personScore, rarity } from "@/lib/engine/hooks/score";
 import { isSensitive } from "@/lib/engine/hooks/sensitive";
@@ -132,6 +132,22 @@ describe("hook finding", () => {
   it("finds nothing when the person isn't on the page", () => {
     const other = findHooks({ fullName: "Riley Park", company: "BCG" }, { id: "ev", text: PAGE, url: null }, ENTRIES);
     expect(other).toEqual([]);
+  });
+});
+
+describe("sentence splitting", () => {
+  const split = (t: string) => sentences(t).map((s) => t.slice(s.start, s.end));
+  it("keeps abbreviations and initials inside a sentence", () => {
+    expect(split("Dana is at L.E.K. Consulting in Boston. Before L.E.K., Dana taught for Splash. Dr. Lee agreed.")).toEqual([
+      "Dana is at L.E.K. Consulting in Boston.",
+      "Before L.E.K., Dana taught for Splash.",
+      "Dr. Lee agreed.",
+    ]);
+    expect(split("J. P. Morgan hired 40 analysts in 2024! Wow.\nNext line")).toEqual([
+      "J. P. Morgan hired 40 analysts in 2024!",
+      "Wow.",
+      "Next line",
+    ]);
   });
 });
 

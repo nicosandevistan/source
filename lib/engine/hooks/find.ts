@@ -44,16 +44,49 @@ const MIN_NAME_CHARS = 3;
 /** Names this common say nothing on their own. */
 const TOO_COMMON = new Set(["english", "research", "intern", "university", "college", "school", "program"]);
 
-/** Splits text into sentences, keeping each sentence's start offset. */
-function sentences(text: string): { start: number; end: number }[] {
+/** Words that end in a period without ending a sentence. */
+const ABBREVIATIONS = new Set([
+  "mr", "mrs", "ms", "dr", "prof", "jr", "sr", "st", "inc", "co", "corp", "ltd", "llc", "vs", "etc", "eg", "ie",
+  "no", "jan", "feb", "mar", "apr", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec", "dept", "univ", "assoc",
+]);
+
+/**
+ * Splits text into sentences, keeping each sentence's offsets. A period
+ * ends a sentence only when followed by a space and a capital letter, digit
+ * or quote (or the end), and not after an abbreviation or a lone letter,
+ * so "L.E.K." and "Dr. Lee" stay inside their sentence. Line breaks always
+ * end a sentence.
+ */
+export function sentences(text: string): { start: number; end: number }[] {
   const out: { start: number; end: number }[] = [];
-  const re = /[^.!?\n]+(?:[.!?]+|\n|$)/g;
-  for (const m of text.matchAll(re)) {
-    const raw = m[0];
+  let start = 0;
+  const push = (end: number) => {
+    const raw = text.slice(start, end);
     const lead = raw.length - raw.trimStart().length;
     const body = raw.trim();
-    if (body) out.push({ start: (m.index ?? 0) + lead, end: (m.index ?? 0) + lead + body.length });
+    if (body) out.push({ start: start + lead, end: start + lead + body.length });
+  };
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    if (ch === "\n") {
+      push(i);
+      start = i + 1;
+      continue;
+    }
+    if (ch !== "." && ch !== "!" && ch !== "?") continue;
+    let j = i;
+    while (j + 1 < text.length && /[.!?"”’)\]]/.test(text[j + 1])) j += 1;
+    const next = text.slice(j + 1, j + 3);
+    if (j + 1 < text.length && !/^\s+["“‘(]?[A-Z0-9]/.test(text.slice(j + 1, j + 6)) && !/^\s*$/.test(next)) continue;
+    if (ch === ".") {
+      const word = /([A-Za-z]+)$/.exec(text.slice(Math.max(0, i - 12), i))?.[1] ?? "";
+      if (word.length === 1 || ABBREVIATIONS.has(word.toLowerCase())) continue;
+    }
+    push(j + 1);
+    start = j + 1;
+    i = j;
   }
+  push(text.length);
   return out;
 }
 
