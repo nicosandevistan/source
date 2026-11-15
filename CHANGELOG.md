@@ -1,5 +1,28 @@
 # Changelog
 
+## Milestone 2 — Plan (2026-11-14)
+
+Added
+- Firm catalog: 184 firms in 19 segments across consulting, banking,
+  investing, biotech/pharma and tech, with estimated application windows.
+- Goal intake: plain words plus optional industries, internship summer,
+  locations and firms already in mind.
+- Rule-based plan generation (no language model): 5–8 firms with a mix of
+  reach, target and likely, each with a reason naming a profile entry, and
+  estimated outreach and application dates.
+- `/dashboard/plan`: the plan, move firms up or down, remove, add a firm
+  (catalog firms get a tier and reason; others are kept as your pick), and
+  change the goal. The contact ladder and first ask are shown below.
+- `goals`, `plans` and `plan_targets` tables with Row Level Security, and
+  tests that one user can't read, add to or change another's plan.
+
+Acceptance criteria
+- [x] "consulting or finance, idk" returns 5–8 firms, all from the catalog,
+      each with a reason tied to the profile (automated, and checked on the
+      owner's profile on localhost: 7 firms).
+- [x] Each firm shows its ladder rules, first ask and estimated timeline
+      labeled "estimate".
+
 ## PDF reading fixes from the owner's real files (2026-11-11)
 
 Fixed

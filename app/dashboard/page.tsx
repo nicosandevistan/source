@@ -12,11 +12,16 @@ export default function DashboardPage() {
         <h1 className="text-xl font-semibold">Nothing here yet</h1>
         <p className="max-w-sm text-sm text-neutral-600">
           Your contacts, drafts and next actions will show up here. Start by
-          building your profile.
+          building your profile, then turn your goal into a plan.
         </p>
-        <Link href="/dashboard/profile" className={buttonVariants()}>
-          Build your profile
-        </Link>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Link href="/dashboard/profile" className={buttonVariants()}>
+            Build your profile
+          </Link>
+          <Link href="/dashboard/plan" className={buttonVariants({ variant: "outline" })}>
+            Make a plan
+          </Link>
+        </div>
       </main>
     </div>
   );
