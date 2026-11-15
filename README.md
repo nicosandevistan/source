@@ -8,8 +8,8 @@ The full specification is in [docs/build-plan.md](docs/build-plan.md). It is
 the source of truth. Choices made where the spec was silent are in
 [DECISIONS.md](DECISIONS.md); progress is in [CHANGELOG.md](CHANGELOG.md).
 
-**Status:** milestones 0 (foundation) and 1 (profile builder) are on
-`main`. Milestone 2 (plan) is in review.
+**Status:** milestones 0–2 (foundation, profile, plan) are on `main`.
+Milestone 3 (discovery, hooks and scoring) is in review.
 
 **Cost:** zero. Everything runs on free tiers (Supabase Free, Vercel Hobby,
 Google sign-in, Gmail API). No language model API and no paid data services;
@@ -103,11 +103,14 @@ land on an empty dashboard with a link to build your profile.
 | `config/app.ts` | Every tunable number (spec section 14) |
 | `lib/env/` | The only place environment variables are read |
 | `lib/supabase/`, `lib/auth/` | Database clients and sign-in |
+| `lib/engine/discovery/`, `lib/engine/hooks/`, `lib/engine/evidence/` | Connections import, candidates and ladder; hook finding, verifier and scoring; page fetcher |
+| `lib/policy/` | Source policy (allowed and blocked sites) |
+| `lib/people/` | People queries and server actions |
 | `lib/engine/plan/` | Firm catalog, goal intake, plan rules, timelines |
 | `lib/plan/` | Plan queries and server actions |
 | `lib/engine/profile/` | Profile import: export CSVs, rule-based LinkedIn PDF and resume reading, alias catalog |
 | `lib/profile/` | Profile queries, saving and server actions |
-| `lib/providers/`, `lib/outreach/`, `lib/policy/`, `jobs/` | Placeholders for later milestones |
+| `lib/providers/`, `lib/outreach/`, `jobs/` | Placeholders for later milestones |
 | `supabase/migrations/` | Database schema; every table has Row Level Security |
 | `tests/` | Vitest tests; `tests/db/` runs the migrations on an in-process Postgres |
 

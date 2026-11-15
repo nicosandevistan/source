@@ -33,7 +33,7 @@ describe("database: migrations apply to a real Postgres", () => {
   it("every public table has Row Level Security on", async () => {
     const tables = await t.tables();
     expect(tables.map((x) => x.tablename)).toEqual(
-      expect.arrayContaining(["users", "audit_log", "profile_entries", "voice_samples", "goals", "plans", "plan_targets"]),
+      expect.arrayContaining(["users", "audit_log", "profile_entries", "voice_samples", "goals", "plans", "plan_targets", "people", "evidence"]),
     );
     expect(tables.filter((x) => !x.rowsecurity)).toEqual([]);
   });
@@ -230,6 +230,61 @@ describe("RLS: goals, plans and plan targets (milestone 2)", () => {
   });
 });
 
+describe("RLS: people and evidence (milestone 3)", () => {
+  let personA: string;
+
+  beforeAll(async () => {
+    personA = await t.as("authenticated", A, async (run) => {
+      const rows = await run<{ id: string }>(
+        `insert into people (source, full_name, company, title) values ('connections', 'Dana Okafor', 'BCG', 'Associate') returning id`,
+      );
+      await run(
+        `insert into evidence (person_id, kind, extracted_text, text_hash) values ($1, 'pasted', 'Dana Okafor taught for Splash.', 'h')`,
+        [rows[0].id],
+      );
+      return rows[0].id;
+    });
+  });
+
+  it("the owner sees their people and evidence; another user sees none", async () => {
+    const own = await t.as("authenticated", A, (run) => run(`select full_name from people`));
+    expect(own).toEqual([{ full_name: "Dana Okafor" }]);
+    for (const table of ["people", "evidence"]) {
+      expect(await t.as("authenticated", B, (run) => run(`select id from ${table}`)), table).toEqual([]);
+    }
+  });
+
+  it("another user cannot attach evidence to A's person, or change or delete A's rows", async () => {
+    await expect(
+      t.as("authenticated", B, (run) =>
+        run(`insert into evidence (person_id, kind, extracted_text, text_hash) values ($1, 'pasted', 'x', 'h')`, [personA]),
+      ),
+    ).rejects.toThrow(/row-level security/);
+    expect(await t.as("authenticated", B, (run) => run(`update people set title = 'x' where id = $1 returning id`, [personA]))).toEqual([]);
+    expect(await t.as("authenticated", B, (run) => run(`delete from people where id = $1 returning id`, [personA]))).toEqual([]);
+  });
+
+  it("only LinkedIn profile links are stored as a person's LinkedIn URL, and web evidence needs a URL", async () => {
+    await expect(
+      t.as("authenticated", A, (run) =>
+        run(`insert into people (source, full_name, linkedin_url) values ('manual', 'X Y', 'https://evil.example.com')`),
+      ),
+    ).rejects.toThrow(/check constraint/);
+    await expect(
+      t.as("authenticated", A, (run) =>
+        run(`insert into evidence (person_id, kind, extracted_text, text_hash) values ($1, 'web', 'x', 'h')`, [personA]),
+      ),
+    ).rejects.toThrow(/check constraint/);
+  });
+
+  it("evidence expires after 30 days by default", async () => {
+    const rows = await t.as("authenticated", A, (run) =>
+      run<{ days: number }>(`select round(extract(epoch from (expires_at - fetched_at)) / 86400) as days from evidence`),
+    );
+    expect(Number(rows[0].days)).toBe(30);
+  });
+});
+
 describe("account deletion", () => {
   it("removing the account removes every row the user owns", async () => {
     await t.db.query(`delete from auth.users where id = $1`, [A]);
@@ -239,7 +294,9 @@ describe("account deletion", () => {
             + (select count(*) from voice_samples where user_id = $1)
             + (select count(*) from goals where user_id = $1)
             + (select count(*) from plans where user_id = $1)
-            + (select count(*) from plan_targets where user_id = $1) as n`,
+            + (select count(*) from plan_targets where user_id = $1)
+            + (select count(*) from people where user_id = $1)
+            + (select count(*) from evidence where user_id = $1) as n`,
       [A],
     );
     expect(Number(left.rows[0].n)).toBe(0);

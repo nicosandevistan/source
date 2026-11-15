@@ -3,6 +3,60 @@
 Choices made where the build plan was silent or ambiguous. Newest first.
 The owner (Nico) can overrule any of these.
 
+## Milestone 3 (2026-11-15)
+
+1. **People come from the user's own connections or are added by hand.**
+   Zero-cost: no people-data provider. The browser takes Connections.csv out
+   of the LinkedIn export and sends only that file; a new import replaces the
+   previous one. Each person row belongs to one user (there is no shared
+   provider cache), so the spec's 30-day `people` expiry does not apply to
+   the user's own connections.
+
+2. **Email addresses in Connections.csv are dropped.** Most are blank, and
+   email finding belongs to milestone 4, after the user shortlists someone.
+
+3. **"Junior" is read from the job title.** Connections give a current
+   title but no start date, so spec 7.3's "started within the last 3 years"
+   becomes a title rule (analyst, associate, consultant and so on, but not
+   senior, principal, director or "associate director").
+
+4. **The user runs the web searches.** There is no free search API to build
+   on (see the zero-cost notes), so each person shows up to 6 search links
+   (spec 7.5 step 1: the name with the company, then with the user's rarest
+   entries). The user opens a result and adds its link; the app then fetches
+   that one page.
+
+5. **The fetcher follows the source policy strictly.** It blocks
+   LinkedIn, social media, people-search and record sites. It refuses
+   private network addresses, checking again after each redirect (this
+   prevents server-side request forgery). It reads robots.txt, waits a second
+   between requests to one site, and stops at 10 seconds or 2 MB. PDFs and
+   downloads are refused. For anything it can't read, including LinkedIn,
+   the user can paste the text instead. Pasted text goes through the same
+   verifier.
+
+6. **Hooks are computed when shown, not stored.** Each page load runs hook
+   finding and the verifier over the saved evidence and the current profile,
+   so hooks always reflect the latest entries and alternate names. The
+   `hooks` and `candidates` tables come in milestone 4, when an outreach needs
+   to point at a fixed hook.
+
+7. **A "record" overlap from connections.** If the user worked at a plan
+   firm, every connection there shares that employer. That overlap is shown
+   with the connection record ("Analyst at Takeda") as its quote and the
+   LinkedIn profile link as its source. It is exact by construction.
+
+8. **Unconfirmed identity is hidden by default.** A verified quote whose
+   page never names the person's company is listed under "may be a
+   different person" and does not count toward the score or the ladder.
+
+9. **Expired evidence is hidden, not yet deleted.** Pages older than 30
+   days are left out of every query. Deleting them needs a scheduled job,
+   which comes with the background jobs in milestone 4.
+
+10. **The "busy" adjustment is 0 for now.** It counts how many app users
+    contacted a person, which needs the outreach log from milestone 4.
+
 ## Milestone 2 (2026-11-14)
 
 1. **The firm catalog lives in code, not a database table.**
