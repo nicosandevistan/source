@@ -1,5 +1,33 @@
 # Changelog
 
+## Milestone 3 — Discovery, hooks and scoring (2026-11-15)
+
+Added
+- Import LinkedIn Connections.csv (from the export ZIP, read in the
+  browser; email addresses dropped) and add people by hand, with optional
+  text about them.
+- `/dashboard/people`: for each firm in the plan, everyone you know there,
+  ranked. Each person shows:
+  - verified hooks, each with its exact quote and a source link (or "text
+    you pasted");
+  - a score breakdown;
+  - the three-rung contact ladder;
+  - up to 6 web-search links to run yourself.
+- Page fetcher with the section 11 source policy, robots.txt, rate limit,
+  private-network protection, and size and time limits.
+- Code-only hook finding, the spec 7.5 quote verifier, a filter for
+  personal details, rarity scoring (spec 7.7) and the ladder (spec 7.8).
+- `people` and `evidence` tables with Row Level Security; evidence expires
+  after 30 days.
+- 37 new tests, including every verifier case spec section 13 lists.
+
+Acceptance criteria
+- [x] Every displayed hook has a verified quote and a working evidence link
+      (automated; checked on localhost with pasted text and a fetched page).
+- [ ] Golden test: needs the owner's real contact who taught at MIT ESP and
+      a page about them.
+- [x] No code path calls a paid service.
+
 ## Milestone 2 — Plan (2026-11-14)
 
 Added
